@@ -1,0 +1,29 @@
+---
+---
+
+<section class="bg-gray-50 rounded-xl p-8 text-center">
+  <h3 class="text-xl font-semibold text-gray-900 mb-2">订阅周报</h3>
+  <p class="text-gray-600 mb-6 text-sm">每周精选 AI 开源项目推荐，直投你的邮箱</p>
+  <form
+    class="max-w-md mx-auto flex gap-0"
+    action="https://buttondown.email/api/emails/embed-subscribe/your-username"
+    method="POST"
+    target="_blank"
+  >
+    <input
+      type="email"
+      name="email"
+      placeholder="输入邮箱地址"
+      required
+      class="flex-1 min-w-0 px-4 py-2.5 rounded-l-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
+    />
+    <button
+      type="submit"
+      class="px-5 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-r-lg hover:bg-brand-700 transition-colors"
+    >
+      订阅
+    </button>
+    <input type="hidden" name="tag" value="ai-leaderboard" />
+    <input type="text" name="hp" class="hidden" />
+  </form>
+</section>

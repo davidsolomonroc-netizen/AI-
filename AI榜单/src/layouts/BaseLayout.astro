@@ -1,0 +1,87 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+}
+
+const { title, description, image } = Astro.props;
+const siteUrl = Astro.site?.href || 'https://ai-leaderboard.pages.dev';
+const canonical = new URL(Astro.request.url).pathname;
+const ogImage = image || `${siteUrl}images/og-default.png`;
+const siteName = 'AI 榜单';
+const fullTitle = title.includes(siteName) ? title : `${title} - ${siteName}`;
+
+import '@/styles/global.css';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={`${siteUrl}${canonical}`} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={fullTitle} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={`${siteUrl}${canonical}`} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content={siteName} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    {description && <meta name="twitter:description" content={description} />}
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- JSON-LD -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: siteName,
+      url: siteUrl,
+      description: '发现最适合 AI 开发者和 Vibe Coding 用户的开源项目',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${siteUrl}/leaderboard?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    })}>
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body class="min-h-screen bg-white text-gray-800 font-sans">
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+      <nav class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="/" class="text-xl font-bold text-brand-600 hover:text-brand-700 transition-colors">
+          AI 榜单
+        </a>
+        <div class="flex items-center gap-6 text-sm">
+          <a href="/" class="text-gray-600 hover:text-brand-600 transition-colors">首页</a>
+          <a href="/leaderboard" class="text-gray-600 hover:text-brand-600 transition-colors">排行榜</a>
+          <a href="/categories" class="text-gray-600 hover:text-brand-600 transition-colors">分类</a>
+          <a href="/weekly" class="text-gray-600 hover:text-brand-600 transition-colors">本周推荐</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="animate-fade-in">
+      <slot />
+    </main>
+
+    <footer class="bg-gray-50 border-t border-gray-100 mt-16">
+      <div class="max-w-6xl mx-auto px-4 py-8 text-center text-sm text-gray-500">
+        <p class="mb-2">AI 榜单 — 发现最适合 AI 开发者的开源项目</p>
+        <p>&copy; {new Date().getFullYear()} AI 榜单</p>
+      </div>
+    </footer>
+  </body>
+</html>

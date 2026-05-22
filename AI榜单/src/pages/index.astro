@@ -1,0 +1,59 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import NewsletterForm from '@/components/NewsletterForm.astro';
+import { getCollection } from 'astro:content';
+
+const allProjects = await getCollection('projects');
+const sortedByDate = allProjects.sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+const featuredProjects = allProjects.filter((p) => p.data.featured);
+const topProjects = [...allProjects].sort((a, b) => b.data.githubStars - a.data.githubStars).slice(0, 6);
+---
+
+<BaseLayout title="AI 榜单 - 发现最佳 AI 开源项目" description="每周精选推荐最适合 AI 开发者和 Vibe Coding 用户的开源项目">
+  <section class="bg-gradient-to-br from-brand-600 to-brand-800 text-white">
+    <div class="max-w-6xl mx-auto px-4 py-16 md:py-24 text-center">
+      <h1 class="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight">AI 榜单</h1>
+      <p class="text-lg md:text-xl text-brand-100 max-w-2xl mx-auto">
+        发现最适合 AI 开发者的开源项目 — 每周精选推荐
+      </p>
+      <p class="text-sm text-brand-200 mt-3">
+        为使用 Claude Code、Cursor 等 AI 编程工具的开发者精选
+      </p>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-4 -mt-8">
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 mb-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <span class="w-1 h-6 bg-brand-600 rounded-full inline-block"></span>
+        精选项目
+      </h2>
+      {featuredProjects.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {featuredProjects.map((project) => (
+            <ProjectCard project={project} />
+          ))}
+        </div>
+      ) : (
+        <p class="text-gray-500 text-sm">暂无精选项目</p>
+      )}
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <span class="w-1 h-6 bg-brand-600 rounded-full inline-block"></span>
+        本周热门
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {topProjects.map((project) => (
+          <ProjectCard project={project} />
+        ))}
+      </div>
+    </section>
+
+    <section class="mb-16">
+      <NewsletterForm />
+    </section>
+  </div>
+</BaseLayout>

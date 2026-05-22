@@ -1,0 +1,68 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import ScoreStars from './ScoreStars.astro';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { data, slug } = project;
+
+const categoryLabels: Record<string, string> = {
+  'agent-framework': 'Agent 框架',
+  'dev-tools': '开发工具',
+  'multimodal': '多模态',
+  'code-generation': '代码生成',
+  'workflow-automation': '工作流自动化',
+  'data-analysis': '数据分析',
+  'other': '其他',
+};
+
+const categoryColors: Record<string, string> = {
+  'agent-framework': 'bg-purple-100 text-purple-700',
+  'dev-tools': 'bg-blue-100 text-blue-700',
+  'multimodal': 'bg-green-100 text-green-700',
+  'code-generation': 'bg-orange-100 text-orange-700',
+  'workflow-automation': 'bg-pink-100 text-pink-700',
+  'data-analysis': 'bg-teal-100 text-teal-700',
+  'other': 'bg-gray-100 text-gray-700',
+};
+---
+
+<article class="rounded-xl border border-gray-200 bg-white p-5 hover:shadow-md hover:border-gray-300 transition-all duration-200 flex flex-col">
+  <div class="flex items-start justify-between mb-3">
+    <span class={`text-xs font-medium px-2.5 py-1 rounded-full ${categoryColors[data.category] || categoryColors['other']}`}>
+      {categoryLabels[data.category] || data.category}
+    </span>
+    <span class="text-sm text-gray-500">★ {data.githubStars.toLocaleString()}</span>
+  </div>
+
+  <h3 class="text-lg font-semibold mb-2">
+    <a href={`/projects/${slug}`} class="text-gray-900 hover:text-brand-600 transition-colors">
+      {data.title}
+    </a>
+  </h3>
+
+  <p class="text-sm text-gray-600 mb-4 flex-grow leading-relaxed">
+    {data.commercialSummary.length > 120
+      ? data.commercialSummary.slice(0, 120) + '...'
+      : data.commercialSummary}
+  </p>
+
+  <div class="flex items-center gap-4 text-xs text-gray-500 mb-4">
+    <span class="flex items-center gap-1">
+      综合 <ScoreStars score={data.editorialScore} size="sm" />
+    </span>
+    <span class="flex items-center gap-1">
+      开箱 <ScoreStars score={data.deploymentRating} size="sm" />
+    </span>
+  </div>
+
+  <a
+    href={`/projects/${slug}`}
+    class="inline-flex items-center text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
+  >
+    查看详情 →
+  </a>
+</article>

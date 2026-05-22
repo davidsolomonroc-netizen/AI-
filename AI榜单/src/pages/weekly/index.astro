@@ -1,0 +1,61 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import NewsletterForm from '@/components/NewsletterForm.astro';
+import { getCollection } from 'astro:content';
+
+const allProjects = await getCollection('projects');
+const sortedByDate = [...allProjects].sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+
+function getWeekNumber(date: Date): number {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
+const weeks: Array<{ label: string; projects: typeof allProjects }> = [];
+let currentWeek = 0;
+let currentProjects: typeof allProjects = [];
+
+for (const p of sortedByDate) {
+  const week = getWeekNumber(p.data.publishDate);
+  if (week !== currentWeek && currentProjects.length > 0) {
+    const year = p.data.publishDate.getFullYear();
+    weeks.push({ label: `${year} 年第 ${currentWeek} 周`, projects: currentProjects });
+    currentProjects = [];
+  }
+  currentWeek = week;
+  currentProjects.push(p);
+}
+if (currentProjects.length > 0) {
+  const year = sortedByDate[0]?.data.publishDate.getFullYear() || 2026;
+  weeks.push({ label: `${year} 年第 ${currentWeek} 周`, projects: currentProjects });
+}
+---
+
+<BaseLayout title="本周推荐 - AI 榜单" description="每周 AI 开源项目精选推荐">
+  <div class="max-w-6xl mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">本周推荐</h1>
+    <p class="text-gray-500 text-sm mb-8">每周精选 AI 开源项目汇总</p>
+
+    {weeks.length > 0 ? (
+      weeks.map((week) => (
+        <section class="mb-12" key={week.label}>
+          <h2 class="text-lg font-semibold text-gray-900 mb-1">{week.label}</h2>
+          <p class="text-sm text-gray-400 mb-5">共 {week.projects.length} 个项目</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {week.projects.map((project) => (
+              <ProjectCard project={project} />
+            ))}
+          </div>
+        </section>
+      ))
+    ) : (
+      <p class="text-gray-500 text-center py-12">暂无项目推荐</p>
+    )}
+
+    <NewsletterForm />
+  </div>
+</BaseLayout>

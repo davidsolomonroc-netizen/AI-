@@ -1,0 +1,78 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import CategoryFilter from '@/components/CategoryFilter.astro';
+import NewsletterForm from '@/components/NewsletterForm.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  const categories = [...new Set(projects.map((p) => p.data.category))];
+  return categories.map((category) => ({
+    params: { category },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+
+const allProjects = await getCollection('projects');
+const filtered = allProjects.filter((p) => p.data.category === category).sort(
+  (a, b) => b.data.githubStars - a.data.githubStars
+);
+
+const categoryLabels: Record<string, string> = {
+  'agent-framework': 'Agent 框架',
+  'dev-tools': '开发工具',
+  'multimodal': '多模态',
+  'code-generation': '代码生成',
+  'workflow-automation': '工作流自动化',
+  'data-analysis': '数据分析',
+  'other': '其他',
+};
+
+const categoryCounts = allProjects.reduce((acc, p) => {
+  const cat = p.data.category;
+  if (!acc[cat]) acc[cat] = 0;
+  acc[cat]++;
+  return acc;
+}, {} as Record<string, number>);
+
+const categoryList = Object.entries(categoryCounts).map(([slug, count]) => ({
+  slug,
+  label: categoryLabels[slug] || slug,
+  count,
+}));
+
+const title = categoryLabels[category] || category;
+---
+
+<BaseLayout title={`${title} - AI 榜单`} description={`浏览 ${title} 分类下的 AI 开源项目`}>
+  <div class="max-w-6xl mx-auto px-4 py-10">
+    <nav class="text-sm text-gray-500 mb-4">
+      <a href="/" class="hover:text-brand-600">首页</a>
+      <span class="mx-2">›</span>
+      <a href="/categories" class="hover:text-brand-600">分类</a>
+      <span class="mx-2">›</span>
+      <span class="text-gray-800">{title}</span>
+    </nav>
+
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">{title}</h1>
+
+    <div class="mb-6">
+      <CategoryFilter categories={categoryList} currentCategory={category} />
+    </div>
+
+    {filtered.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+        {filtered.map((project) => (
+          <ProjectCard project={project} />
+        ))}
+      </div>
+    ) : (
+      <p class="text-gray-500 text-center py-12">该分类下暂无项目</p>
+    )}
+
+    <NewsletterForm />
+  </div>
+</BaseLayout>

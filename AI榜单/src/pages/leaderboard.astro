@@ -1,0 +1,133 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ScoreStars from '@/components/ScoreStars.astro';
+import CategoryFilter from '@/components/CategoryFilter.astro';
+import NewsletterForm from '@/components/NewsletterForm.astro';
+import { getCollection } from 'astro:content';
+
+const allProjects = await getCollection('projects');
+
+const categoryLabels: Record<string, string> = {
+  'agent-framework': 'Agent 框架',
+  'dev-tools': '开发工具',
+  'multimodal': '多模态',
+  'code-generation': '代码生成',
+  'workflow-automation': '工作流自动化',
+  'data-analysis': '数据分析',
+  'other': '其他',
+};
+
+const categoryCounts = allProjects.reduce((acc, p) => {
+  const cat = p.data.category;
+  if (!acc[cat]) acc[cat] = 0;
+  acc[cat]++;
+  return acc;
+}, {} as Record<string, number>);
+
+const categoryList = Object.entries(categoryCounts).map(([slug, count]) => ({
+  slug,
+  label: categoryLabels[slug] || slug,
+  count,
+}));
+
+const sortBy = Astro.url.searchParams.get('sort') || 'stars';
+const order = Astro.url.searchParams.get('order') || 'desc';
+
+const sorted = [...allProjects].sort((a, b) => {
+  let cmp = 0;
+  switch (sortBy) {
+    case 'date':
+      cmp = a.data.publishDate.getTime() - b.data.publishDate.getTime();
+      break;
+    case 'score':
+      cmp = a.data.editorialScore - b.data.editorialScore;
+      break;
+    case 'deploy':
+      cmp = a.data.deploymentRating - b.data.deploymentRating;
+      break;
+    case 'stars':
+    default:
+      cmp = a.data.githubStars - b.data.githubStars;
+      break;
+  }
+  return order === 'desc' ? -cmp : cmp;
+});
+
+function sortUrl(sort: string): string {
+  const newOrder = sort === sortBy && order === 'desc' ? 'asc' : 'desc';
+  return `/leaderboard?sort=${sort}&order=${newOrder}`;
+}
+
+function sortIcon(sort: string): string {
+  if (sort !== sortBy) return '';
+  return order === 'desc' ? ' ↓' : ' ↑';
+}
+---
+
+<BaseLayout title="排行榜 - AI 榜单" description="按星级、评分排序的 AI 开源项目排行榜">
+  <div class="max-w-6xl mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">排行榜</h1>
+    <p class="text-gray-500 text-sm mb-6">点击表头切换排序方式</p>
+
+    <div class="mb-6">
+      <CategoryFilter categories={categoryList} />
+    </div>
+
+    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-4 py-3 text-left font-medium text-gray-500 w-12">#</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-500">项目</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-500 hidden md:table-cell">分类</th>
+            <th class="px-4 py-3 text-right font-medium text-gray-500">
+              <a href={sortUrl('stars')} class="hover:text-brand-600 transition-colors">
+                ★ 星数{sortIcon('stars')}
+              </a>
+            </th>
+            <th class="px-4 py-3 text-right font-medium text-gray-500 hidden md:table-cell">
+              <a href={sortUrl('score')} class="hover:text-brand-600 transition-colors">
+                综合{sortIcon('score')}
+              </a>
+            </th>
+            <th class="px-4 py-3 text-right font-medium text-gray-500 hidden md:table-cell">
+              <a href={sortUrl('deploy')} class="hover:text-brand-600 transition-colors">
+                开箱{sortIcon('deploy')}
+              </a>
+            </th>
+            <th class="px-4 py-3 text-right font-medium text-gray-500 hidden md:table-cell">
+              <a href={sortUrl('date')} class="hover:text-brand-600 transition-colors">
+                日期{sortIcon('date')}
+              </a>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {sorted.map((project, index) => {
+            const rank = index + 1;
+            const borderClass = rank === 1 ? 'border-l-2 border-l-amber-400' : rank === 2 ? 'border-l-2 border-l-gray-400' : rank === 3 ? 'border-l-2 border-l-amber-700' : '';
+            return (
+              <tr class={`hover:bg-gray-50 transition-colors ${borderClass}`}>
+                <td class="px-4 py-4 text-gray-400 font-mono text-xs">{rank}</td>
+                <td class="px-4 py-4">
+                  <a href={`/projects/${project.slug}`} class="font-medium text-gray-900 hover:text-brand-600 transition-colors">
+                    {project.data.title}
+                  </a>
+                </td>
+                <td class="px-4 py-4 text-gray-500 hidden md:table-cell">{categoryLabels[project.data.category] || project.data.category}</td>
+                <td class="px-4 py-4 text-right font-mono text-sm text-gray-700">{project.data.githubStars.toLocaleString()}</td>
+                <td class="px-4 py-4 text-right hidden md:table-cell"><ScoreStars score={project.data.editorialScore} size="sm" /></td>
+                <td class="px-4 py-4 text-right hidden md:table-cell"><ScoreStars score={project.data.deploymentRating} size="sm" /></td>
+                <td class="px-4 py-4 text-right text-gray-400 text-xs hidden md:table-cell">{project.data.publishDate.toLocaleDateString('zh-CN')}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-12">
+      <NewsletterForm />
+    </div>
+  </div>
+</BaseLayout>
