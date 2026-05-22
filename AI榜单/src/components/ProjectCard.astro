@@ -44,11 +44,20 @@ const categoryColors: Record<string, string> = {
     </a>
   </h3>
 
-  <p class="text-sm text-gray-600 mb-4 flex-grow leading-relaxed">
+  <p class="text-sm text-gray-600 mb-3 flex-grow leading-relaxed">
     {data.commercialSummary.length > 120
       ? data.commercialSummary.slice(0, 120) + '...'
       : data.commercialSummary}
   </p>
+
+  <!-- Target Audience Badges -->
+  {data.targetAudience && data.targetAudience.length > 0 && (
+    <div class="flex flex-wrap gap-1.5 mb-3">
+      {data.targetAudience.slice(0, 3).map((a) => (
+        <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[11px] font-medium">{a}</span>
+      ))}
+    </div>
+  )}
 
   <div class="flex items-center gap-4 text-xs text-gray-500 mb-4">
     <span class="flex items-center gap-1">

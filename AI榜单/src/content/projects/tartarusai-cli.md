@@ -19,6 +19,8 @@ vibeCodingPrompt: "1. 下载最新版二进制文件（Linux: curl -L -o tartaru
 4. 运行./tartarusai-cli开始使用无审查AI编码代理
 5. 输入你的编程任务，代理会直接执行代码生成和修改"
 pitfallGuide: "1. 需要注册账号并生成令牌，不能直接使用\n2. 仅支持加密货币计费，不支持传统支付方式\n3. macOS和ARM架构需单独联系获取\n4. 无审查特性可能生成不安全代码，需自行审核\n5. 目前仅提供Linux和Windows x86_64二进制，其他平台需手动构建"
+targetAudience: ["独立开发者", "技术负责人", "创业者"]
+useCases: ["智能客服", "任务自动化", "工作流编排"]
 ---
 ## 🤖 自动发现
 

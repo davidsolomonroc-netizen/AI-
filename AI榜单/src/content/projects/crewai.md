@@ -15,6 +15,8 @@ vibeCodingRating: 5
 commercialSummary: "CrewAI 让你可以用自然语言定义多个 AI Agent 的角色和任务，自动协作完成复杂工作流。适合搭建自动化客服系统、市场调研团队、内容生产流水线等商业场景。"
 vibeCodingPrompt: "使用 CrewAI 搭建一个自动化竞品分析系统：1) 定义 Researcher Agent：负责搜索和收集竞品公开信息 2) 定义 Analyst Agent：分析收集到的数据并生成对比报告 3) 定义 Writer Agent：将分析结果写成结构化的周报 4) 使用 Crew 的 Process.sequential 串联三个 Agent 5) 设置 task 依赖关系确保数据流向正确"
 pitfallGuide: "1. Token 消耗：多 Agent 对话会消耗大量 Token，建议设置 max_tokens 限制\n2. API Key 配置：需要为每个 Agent 正确配置 LLM 的 API Key\n3. Task 定义：任务描述越具体，输出质量越高，避免模糊的 task 描述\n4. 调试难度：多 Agent 互相调用时出错很难定位，建议先单个测试再组队"
+targetAudience: ["独立开发者", "技术负责人", "创业者"]
+useCases: ["智能客服", "任务自动化", "工作流编排"]
 ---
 ## CrewAI 深度评测
 

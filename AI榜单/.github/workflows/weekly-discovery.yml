@@ -8,6 +8,9 @@ on:
 jobs:
   discover:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: AI榜单
     steps:
       - uses: actions/checkout@v4
       - name: 运行自动发现脚本

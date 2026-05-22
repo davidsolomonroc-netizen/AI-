@@ -20,6 +20,8 @@ vibeCodingPrompt: "使用Claude Code通过RMUX SDK创建一个Python脚本：
 4. 若需分窗格：rmux split-window -h -t myapp
 5. 最后关闭会话：rmux kill-session -t myapp"
 pitfallGuide: "1. 目前为v0.2.0预览版，可能有bug，建议先在非生产环境测试。\n2. 虽然兼容tmux命令，但并非100%功能一致，迁移时需验证关键命令。\n3. 依赖Rust环境，非技术用户安装可能需额外步骤。\n4. SDK目前只提供Rust绑定，其他语言需自行封装。\n5. Windows下PowerShell支持可能不如Linux/macOS稳定。"
+targetAudience: ["独立开发者", "技术负责人"]
+useCases: ["开发效率提升", "代码审查", "CI/CD 集成"]
 ---
 ## 🤖 自动发现
 

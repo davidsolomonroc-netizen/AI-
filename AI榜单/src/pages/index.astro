@@ -8,6 +8,9 @@ const allProjects = await getCollection('projects');
 const sortedByDate = allProjects.sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
 const featuredProjects = allProjects.filter((p) => p.data.featured);
 const topProjects = [...allProjects].sort((a, b) => b.data.githubStars - a.data.githubStars).slice(0, 6);
+
+const totalStars = allProjects.reduce((sum, p) => sum + p.data.githubStars, 0);
+const categoryCount = new Set(allProjects.map((p) => p.data.category)).size;
 ---
 
 <BaseLayout title="AI 榜单 - 发现最佳 AI 开源项目" description="每周精选推荐最适合 AI 开发者和 Vibe Coding 用户的开源项目">
@@ -23,8 +26,30 @@ const topProjects = [...allProjects].sort((a, b) => b.data.githubStars - a.data.
     </div>
   </section>
 
-  <div class="max-w-6xl mx-auto px-4 -mt-8">
-    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 mb-10">
+  <!-- Stats Bar -->
+  <div class="max-w-6xl mx-auto px-4 -mt-6 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+        <p class="text-2xl font-bold text-brand-600">{allProjects.length}</p>
+        <p class="text-xs text-gray-500 mt-1">收录项目</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+        <p class="text-2xl font-bold text-brand-600">{categoryCount}</p>
+        <p class="text-xs text-gray-500 mt-1">项目分类</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+        <p class="text-2xl font-bold text-brand-600">★ {totalStars.toLocaleString()}</p>
+        <p class="text-xs text-gray-500 mt-1">GitHub 总星数</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+        <p class="text-2xl font-bold text-brand-600">{sortedByDate[0]?.data.publishDate.toLocaleDateString('zh-CN') || '-'}</p>
+        <p class="text-xs text-gray-500 mt-1">最近更新</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 mb-10">
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
       <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
         <span class="w-1 h-6 bg-brand-600 rounded-full inline-block"></span>
         精选项目

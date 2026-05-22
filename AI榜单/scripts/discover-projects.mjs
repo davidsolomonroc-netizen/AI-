@@ -134,7 +134,9 @@ README 摘要: ${readme.slice(0, 2000)}
   "vibeCodingRating": 4,
   "commercialSummary": "2-3句话面向非技术读者：解决什么业务问题，适合谁用",
   "vibeCodingPrompt": "给 Claude Code 使用的具体 Prompt，一步步说明如何用这个项目搭一个实际应用",
-  "pitfallGuide": "3-5条避坑要点，每行用\\\\n分隔"
+  "pitfallGuide": "3-5条避坑要点，每行用\\\\n分隔",
+  "targetAudience": ["适合人群，可选：独立开发者/创业者/产品经理/企业团队/AI 研究者/内容创作者/数据分析师/技术负责人"],
+  "useCases": ["适用场景，2-4个具体场景"]
 }`;
 
   // 尝试 AI API
@@ -202,6 +204,8 @@ function generateFallback(repo) {
     commercialSummary: `${repo.description || repo.name} 是 GitHub 上近期热门的开源项目，获得了 ${stars} 颗星。值得 AI 开发者关注和使用。`,
     vibeCodingPrompt: `探索 ${repo.name} 的功能和用法。请帮我：1) 阅读项目文档了解核心功能 2) 搭建一个 demo 3) 测试主要特性`,
     pitfallGuide: '1. 建议先阅读官方文档了解项目架构\n2. 注意检查依赖版本兼容性\n3. 生产环境使用前建议充分测试',
+    targetAudience: ['独立开发者', '技术负责人'],
+    useCases: ['开发集成', '技术评估'],
   };
 }
 
@@ -228,6 +232,8 @@ vibeCodingRating: ${analysis.vibeCodingRating || 3}
 commercialSummary: "${(analysis.commercialSummary || '').replace(/"/g, '\\"')}"
 vibeCodingPrompt: "${(analysis.vibeCodingPrompt || '').replace(/"/g, '\\"')}"
 pitfallGuide: "${(analysis.pitfallGuide || '').replace(/"/g, '\\"')}"
+targetAudience: [${(analysis.targetAudience || []).map(t => `"${t.replace(/"/g, '\\"')}"`).join(', ')}]
+useCases: [${(analysis.useCases || []).map(u => `"${u.replace(/"/g, '\\"')}"`).join(', ')}]
 ---
 ## 🤖 自动发现
 

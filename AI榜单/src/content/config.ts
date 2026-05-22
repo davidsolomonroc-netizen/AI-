@@ -32,6 +32,9 @@ const projectsCollection = defineCollection({
     vibeCodingPrompt: z.string(),
     pitfallGuide: z.string(),
     affiliateLink: z.string().url().optional(),
+
+    targetAudience: z.array(z.string()).default([]),
+    useCases: z.array(z.string()).default([]),
   }),
 });
 

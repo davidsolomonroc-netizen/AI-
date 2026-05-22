@@ -83,5 +83,34 @@ import '@/styles/global.css';
         <p>&copy; {new Date().getFullYear()} AI 榜单</p>
       </div>
     </footer>
+
+    <!-- Scroll to top -->
+    <button
+      id="scroll-top"
+      class="fixed bottom-6 right-6 z-50 w-10 h-10 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center text-gray-400 hover:text-brand-600 hover:border-brand-200 transition-all duration-200 opacity-0 translate-y-4"
+      aria-label="返回顶部"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+      </svg>
+    </button>
+
+    <script>
+      const btn = document.getElementById('scroll-top');
+      if (btn) {
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 400) {
+            btn.classList.remove('opacity-0', 'translate-y-4');
+            btn.classList.add('opacity-100', 'translate-y-0');
+          } else {
+            btn.classList.remove('opacity-100', 'translate-y-0');
+            btn.classList.add('opacity-0', 'translate-y-4');
+          }
+        });
+        btn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+    </script>
   </body>
 </html>
