@@ -1,6 +1,6 @@
 ---
-title: "大象代理"
-description: "个人模型优先的自我进化AI代理"
+title: "大象智能体"
+description: "自我进化的个人AI助手"
 publishDate: 2026-05-22
 featured: false
 githubUrl: "https://github.com/agentic-in/elephant-agent"
@@ -12,18 +12,23 @@ tags: ["personal-ai", "self-evolution", "memory", "context"]
 editorialScore: 4
 deploymentRating: 3
 vibeCodingRating: 4
-commercialSummary: "Elephant Agent 是一款基于个人模型的自我进化AI代理，能够记住用户的偏好、决策和风险，从而提供更智能、个性化的帮助。适合需要长期、连贯AI辅助的个人用户或团队，避免每次对话都从零开始。"
-vibeCodingPrompt: "1. 克隆仓库并安装依赖：git clone https://github.com/agentic-in/elephant-agent.git && cd elephant-agent && pip install -r requirements.txt
-2. 配置你的API密钥（如OpenAI）到.env文件
-3. 运行主程序：python main.py，启动后Elephant Agent会自动加载你的个人模型
-4. 在对话中提供初始上下文，代理会逐步学习并记忆你的偏好和决策
-5. 使用命令如`/remember`来强制记忆关键信息，或`/forget`来纠正错误记忆"
-pitfallGuide: "1. 初始训练需要投入时间：代理需要多次交互才能建立有意义的个人模型\n2. 内存管理需谨慎：错误记忆会影响后续判断，建议定期审查和纠正\n3. 依赖外部LLM API：需要稳定的网络和API密钥，离线场景不支持\n4. 非技术用户部署略复杂：需要Python环境和命令行操作，建议提供一键安装包\n5. 隐私风险：个人模型存储在本地，但API调用可能泄露数据，建议使用本地模型"
-targetAudience: ["独立开发者", "技术负责人", "创业者"]
-useCases: ["智能客服", "任务自动化", "工作流编排"]
+commercialSummary: "Elephant Agent 是一款以个人模型为核心的自我进化AI代理，能持续学习用户习惯、记忆上下文，并自主优化行为。适合希望拥有个性化、长期陪伴型AI助手的独立开发者或AI爱好者，无需依赖外部API即可运行。"
+vibeCodingPrompt: "使用 Claude Code 集成 Elephant Agent 的步骤：
+1. 克隆项目：git clone https://github.com/agentic-in/elephant-agent.git
+2. 进入目录并安装依赖：cd elephant-agent && pip install -r requirements.txt
+3. 运行初始化脚本：python setup.py --init
+4. 启动代理：python run.py --mode interactive
+5. 在 Claude Code 中调用代理接口：from elephant_agent import Agent; agent = Agent(); response = agent.chat('你的问题')"
+pitfallGuide: "1. 依赖本地模型，需要至少8GB显存或使用CPU模式（速度较慢）
+2. 首次运行需下载模型权重，可能耗时较长
+3. 记忆功能默认存储在本地，注意备份数据
+4. 跨平台兼容性有限，Windows用户可能需要WSL
+5. 自我进化功能需要持续使用才能体现效果"
+targetAudience: ["独立开发者", "AI研究者", "技术负责人"]
+useCases: ["个性化AI助手", "长期对话记忆", "本地化知识管理"]
 ---
 ## 🤖 自动发现
 
-本项目由 AI 榜单自动发现系统收录。Personal-Model First Self Evolving AI Agent 🐘
+本项目由 AI 榜单自动发现系统收录。个人模型优先的自我进化AI代理
 
-> GitHub: [agentic-in/elephant-agent](https://github.com/agentic-in/elephant-agent) | ⭐ 403 | Python
+> GitHub: [agentic-in/elephant-agent](https://github.com/agentic-in/elephant-agent) | ⭐ 403 | ["personal-ai",

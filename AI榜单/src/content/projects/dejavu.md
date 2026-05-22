@@ -1,5 +1,5 @@
 ---
-title: "Deja Vu 本地优先AI记忆"
+title: "DejaVu 跨工具记忆"
 description: "跨工具持久化AI记忆，隐私安全"
 publishDate: 2026-05-22
 featured: false
@@ -12,14 +12,23 @@ tags: ["memory", "local-first", "mcp", "privacy"]
 editorialScore: 4
 deploymentRating: 3
 vibeCodingRating: 4
-commercialSummary: "Deja Vu 解决AI工具会话记忆丢失问题，让用户偏好和上下文在不同AI助手间自动共享，无需云存储或账户。适合需要一致AI体验的个人开发者、知识工作者和AI代理构建者。"
-vibeCodingPrompt: "在Claude Code中，先运行`pip install dejavu-memory`和`dejavu init`初始化本地记忆库。然后设置环境变量`VENICE_API_KEY`。使用`dejavu add \"用户偏好\"`添加记忆，用`dejavu search \"查询\"`检索。在Python脚本中导入`from dejavu import Memory`，实例化`Memory()`后调用`add()`和`search()`方法，将记忆集成到你的AI代理工作流中。"
-pitfallGuide: "1. 必须设置VENICE_API_KEY环境变量才能使用记忆提取功能。\n2. 记忆存储在本地~/.dejavu目录，备份该目录可迁移记忆。\n3. 目前仅支持单用户模式，多用户需自行实现user_id隔离。\n4. SQLite数据库需手动维护，大量记忆可能影响性能。\n5. 依赖Venice API，API不可用时部分功能会受限。"
-targetAudience: ["独立开发者", "技术负责人", "创业者"]
-useCases: ["智能客服", "任务自动化", "工作流编排"]
+commercialSummary: "DejaVu 为AI工具提供持久化记忆，让不同AI应用共享上下文，同时保障数据本地存储与隐私安全。适合需要跨工具协作的记忆管理场景，如个人助理或企业知识库。"
+vibeCodingPrompt: "使用 DejaVu 搭建一个跨工具记忆助手：
+1. 克隆仓库并安装依赖：git clone https://github.com/JSingletonAI/dejavu && cd dejavu && pip install -r requirements.txt
+2. 配置本地记忆存储路径，编辑 config.yaml 设置 memory_path 为本地目录
+3. 启动 MCP 服务：python server.py --port 8080
+4. 在 Claude Code 中集成：通过 MCP 客户端连接 localhost:8080，注册记忆读写工具
+5. 测试：向 Claude 发送“记住我的偏好：使用暗色模式”，然后重启对话并询问“我的偏好是什么”，验证记忆持久化"
+pitfallGuide: "确保本地存储路径有足够磁盘空间
+MCP 协议版本兼容性需检查，建议使用最新 release
+隐私安全依赖本地存储，请勿将 memory_path 设为网络共享目录
+首次启动需手动创建 config.yaml，否则使用默认配置可能不生效
+多工具并发写入时注意锁机制，避免数据冲突"
+targetAudience: ["独立开发者", "创业者", "技术负责人"]
+useCases: ["个人AI助理跨会话记忆", "多AI工具协作知识共享", "本地隐私优先的记忆管理"]
 ---
 ## 🤖 自动发现
 
-本项目由 AI 榜单自动发现系统收录。Memory that follows you across every AI tool. No cloud storage. No account required. Set it up once, use it everywhere.
+本项目由 AI 榜单自动发现系统收录。跨工具持久化AI记忆，隐私安全
 
-> GitHub: [JSingletonAI/dejavu](https://github.com/JSingletonAI/dejavu) | ⭐ 63 | Python
+> GitHub: [JSingletonAI/dejavu](https://github.com/JSingletonAI/dejavu) | ⭐ 63 | ["memory",

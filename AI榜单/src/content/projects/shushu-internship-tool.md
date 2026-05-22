@@ -1,5 +1,5 @@
 ---
-title: "鼠鼠实习妙妙工具"
+title: "求职工具箱"
 description: "JD转项目、项目转简历、简历转面试"
 publishDate: 2026-05-22
 featured: false
@@ -12,19 +12,23 @@ tags: ["AI", "internship", "job-hunting", "skill-prep"]
 editorialScore: 4
 deploymentRating: 3
 vibeCodingRating: 4
-commercialSummary: "这个工具帮助求职者将岗位描述（JD）快速转化为可展示的项目素材、简历内容和面试准备材料。适合计算机方向零经验或低经验的实习生，用最短路径完成选题、理解、复现、简历表达和面试拷问。"
-vibeCodingPrompt: "1. 克隆项目仓库到本地。
-2. 安装依赖：pip install -r requirements.txt。
-3. 准备目标JD文本和你的基础情况（知识水平、技术栈偏好、时间预算）。
-4. 运行主脚本，输入JD内容，工具会推荐2-3个GitHub项目并生成审计报告。
-5. 根据审计报告，选择项目进行本地跑通，然后使用工具规划改造点。
-6. 最后生成STAR简历项目描述、核心代码讲解、面试Q&A和投递检查表。"
-pitfallGuide: "1. 确保JD文本完整，包含岗位职责、技术要求、业务方向等关键字段。\n2. 工具推荐项目后，建议先本地验证可行性，避免依赖远程环境。\n3. 生成的面试材料需人工审核，确保与自身真实经历匹配。\n4. 项目改造点需要一定的编程基础，建议结合自身能力选择。\n5. 推荐与VibeResume联动使用，但需分别配置环境。"
-targetAudience: ["创业者", "产品经理", "企业团队"]
-useCases: ["业务流程自动化", "数据同步", "定时任务"]
+commercialSummary: "这是一个面向求职者的AI自动化工具，通过将职位描述转换为项目经验、项目经验优化为简历、简历匹配面试问题，帮助用户高效准备求职材料。适合正在找实习或全职工作的学生和职场新人使用。"
+vibeCodingPrompt: "1. 克隆项目并安装依赖：git clone https://github.com/LiuMengxuan04/shushu-internship-tool.git && cd shushu-internship-tool && pip install -r requirements.txt
+2. 准备一份目标职位描述（JD）文本文件，或从招聘网站复制粘贴。
+3. 运行主脚本，输入JD内容，工具将自动生成对应的项目经验描述。
+4. 将生成的项目描述输入到项目转简历模块，产出优化后的简历内容。
+5. 最后使用简历转面试模块，基于简历生成面试问题列表，用于模拟面试练习。
+6. 自定义模型或提示词（可选），以适配不同行业或职位。"
+pitfallGuide: "1. 输出质量依赖输入JD的详细程度，过于简短的JD可能导致结果不准确。
+2. 生成的简历和项目描述需要人工审核和调整，避免直接复制使用。
+3. 部分功能可能需要API密钥（如OpenAI），需提前配置环境变量。
+4. 中文场景下，建议使用中英文混合输入以获得更好效果。
+5. 项目可能未持续更新，遇到依赖问题需手动修复。"
+targetAudience: ["求职学生", "职场新人", "独立开发者"]
+useCases: ["将招聘JD自动转化为个人项目经验描述", "将零散项目经历整理成简历亮点", "根据简历生成针对性面试问题", "批量处理多个职位申请"]
 ---
 ## 🤖 自动发现
 
-本项目由 AI 榜单自动发现系统收录。把岗位描述变项目，把项目变简历，把简历变面试。
+本项目由 AI 榜单自动发现系统收录。JD转项目、项目转简历、简历转面试
 
-> GitHub: [LiuMengxuan04/shushu-internship-tool](https://github.com/LiuMengxuan04/shushu-internship-tool) | ⭐ 421 | Python
+> GitHub: [LiuMengxuan04/shushu-internship-tool](https://github.com/LiuMengxuan04/shushu-internship-tool) | ⭐ 421 | ["AI",

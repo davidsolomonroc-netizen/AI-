@@ -1,6 +1,6 @@
 ---
-title: "RMUX：通用终端复用器"
-description: "用Rust重写tmux，支持AI代理集成"
+title: "Rmux - Rust重写的tmux"
+description: "用Rust实现的tmux替代品，原生支持AI代理集成"
 publishDate: 2026-05-22
 featured: false
 githubUrl: "https://github.com/Helvesec/rmux"
@@ -12,19 +12,14 @@ tags: ["tmux", "terminal", "agent", "rust"]
 editorialScore: 4
 deploymentRating: 3
 vibeCodingRating: 4
-commercialSummary: "RMUX是一个高性能的终端复用器，兼容tmux命令，但提供类型化SDK和持久化会话，适合需要远程管理、自动化脚本或与AI代理集成的开发者。它解决了tmux在可编程性和现代工具链集成上的不足。"
-vibeCodingPrompt: "使用Claude Code通过RMUX SDK创建一个Python脚本：
-1. 创建新会话：rmux new-session -s myapp -d
-2. 在会话中运行命令：rmux send-keys -t myapp 'python my_script.py' Enter
-3. 等待输出并捕获结果：使用rmux capture-pane -t myapp
-4. 若需分窗格：rmux split-window -h -t myapp
-5. 最后关闭会话：rmux kill-session -t myapp"
-pitfallGuide: "1. 目前为v0.2.0预览版，可能有bug，建议先在非生产环境测试。\n2. 虽然兼容tmux命令，但并非100%功能一致，迁移时需验证关键命令。\n3. 依赖Rust环境，非技术用户安装可能需额外步骤。\n4. SDK目前只提供Rust绑定，其他语言需自行封装。\n5. Windows下PowerShell支持可能不如Linux/macOS稳定。"
-targetAudience: ["独立开发者", "技术负责人"]
-useCases: ["开发效率提升", "代码审查", "CI/CD 集成"]
+commercialSummary: "通过Rust重写提升性能和安全性，原生AI代理集成使开发者能直接在终端环境中调用AI辅助，减少上下文切换。适合追求高性能和AI工作流整合的团队，但生态和插件兼容性尚待验证。"
+vibeCodingPrompt: "使用rmux创建会话，并集成一个AI代理，自动分析终端日志并给出优化建议。"
+pitfallGuide: "注意：项目尚在早期，可能缺少tmux完整特性（如脚本化布局、插件系统）；AI代理集成需额外配置API密钥，且可能增加资源消耗。"
+targetAudience: ["终端重度用户", "Rust开发者", "AI工作流实践者", "tmux替代品寻求者"]
+useCases: ["多终端会话管理", "AI辅助终端操作", "自动化日志分析", "开发环境容器化"]
 ---
 ## 🤖 自动发现
 
-本项目由 AI 榜单自动发现系统收录。Universal Rust multiplexer with a typed SDK — drive any CLI or TUI app from code. Native on Linux, macOS, and Windows.
+本项目由 AI 榜单自动发现系统收录。用Rust重写tmux，支持AI代理集成
 
 > GitHub: [Helvesec/rmux](https://github.com/Helvesec/rmux) | ⭐ 624 | Rust

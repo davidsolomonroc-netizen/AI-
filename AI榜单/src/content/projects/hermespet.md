@@ -1,5 +1,5 @@
 ---
-title: "赫密斯宠物"
+title: "HermesPet 桌面宠物"
 description: "AI 桌面伴侣，住进 MacBook 刘海里"
 publishDate: 2026-05-22
 featured: false
@@ -10,20 +10,25 @@ githubRepo: "HermesPet"
 category: "other"
 tags: ["desktop-app", "llm", "macos", "swift"]
 editorialScore: 4
-deploymentRating: 5
+deploymentRating: 3
 vibeCodingRating: 4
-commercialSummary: "HermesPet 让 AI 助手以像素宠物的形式常驻 MacBook 的刘海中，支持同时接入 ChatGPT、Claude、DeepSeek 等五种大模型引擎。适合 Mac 用户、AI 爱好者和桌面效率工具爱好者，无需编程即可使用。"
-vibeCodingPrompt: "1. 从 GitHub Releases 下载最新 DMG 文件并安装到 /Applications 目录。
-2. 打开 HermesPet，在菜单栏设置中粘贴你的 API Key（支持 OpenAI、Claude、DeepSeek 等）。
-3. 选择你喜欢的像素宠物皮肤（目前有 5 种），点击启用即可在刘海里看到 AI 伙伴。
-4. 点击宠物或使用快捷键唤出对话窗口，开始提问或闲聊。
-5. 如需自定义引擎或宠物行为，可在设置中调整并发模型和回复风格。"
-pitfallGuide: "1. 仅支持 macOS 14.0+，旧系统无法运行。\n2. API Key 需自行准备，项目不提供免费额度。\n3. 首次安装需在系统设置中允许“辅助功能”权限以支持快捷键。\n4. 刘海里显示可能被某些第三方菜单栏工具遮挡，建议关闭冲突应用。\n5. 多引擎并行时注意 API 配额和费用，避免超额调用。"
-targetAudience: ["独立开发者", "技术负责人"]
-useCases: ["技术探索", "概念验证"]
+commercialSummary: "这是一个将 AI 宠物嵌入 MacBook 刘海区域的桌面应用，为用户提供趣味互动和情感陪伴。适合希望在工作和学习时获得轻松体验的个人用户，特别是 Mac 用户。"
+vibeCodingPrompt: "1. 克隆仓库: git clone https://github.com/basionwang-bot/HermesPet.git
+2. 进入项目目录: cd HermesPet
+3. 确保已安装 Xcode 和 Swift 开发环境
+4. 打开项目: open HermesPet.xcodeproj
+5. 在 Xcode 中选择目标设备为 Mac，点击运行
+6. 应用启动后，AI 宠物将出现在屏幕刘海区域，可进行交互"
+pitfallGuide: "1. 仅支持 macOS，不兼容 Windows/Linux
+2. 需要 Xcode 和 Swift 环境，非技术用户配置较麻烦
+3. 刘海区域交互可能受系统版本和屏幕分辨率影响
+4. 宠物 AI 功能依赖本地或远程 LLM，需额外配置 API 密钥
+5. 应用可能占用一定系统资源，低配 Mac 上会有卡顿"
+targetAudience: ["独立开发者", "创业者", "产品经理", "AI 研究者", "内容创作者", "技术负责人"]
+useCases: ["个人桌面陪伴与娱乐", "AI 互动体验演示", "Mac 系统趣味功能开发学习", "情绪陪伴与减压场景"]
 ---
 ## 🤖 自动发现
 
-本项目由 AI 榜单自动发现系统收录。让 AI 住在你 MacBook 的刘海里 · 零依赖开箱即用 · 多引擎并行的桌面 AI 伴侣（Swift 6 / SwiftUI / macOS 14+）
+本项目由 AI 榜单自动发现系统收录。AI 桌面伴侣，住进 MacBook 刘海里
 
-> GitHub: [basionwang-bot/HermesPet](https://github.com/basionwang-bot/HermesPet) | ⭐ 184 | Swift
+> GitHub: [basionwang-bot/HermesPet](https://github.com/basionwang-bot/HermesPet) | ⭐ 184 | ["desktop-app",

@@ -1,7 +1,7 @@
 ---
 title: "Stable Diffusion WebUI"
-description: "AI 图像生成的最流行工具，支持文生图、图生图和海量扩展"
-publishDate: 2026-05-15
+description: "最流行的AI图像生成工具"
+publishDate: 2026-05-22
 featured: false
 githubUrl: "https://github.com/AUTOMATIC1111/stable-diffusion-webui"
 githubStars: 150000
@@ -9,25 +9,24 @@ githubOwner: "AUTOMATIC1111"
 githubRepo: "stable-diffusion-webui"
 category: "multimodal"
 tags: ["image-generation", "stable-diffusion", "ui", "python"]
-editorialScore: 4
+editorialScore: 5
 deploymentRating: 3
-vibeCodingRating: 3
-commercialSummary: "SD WebUI 是 AI 图像生成的一站式解决方案，提供浏览器界面和丰富的扩展生态。适合电商产品图生成、营销素材制作、建筑设计概念图、游戏素材批量产出等商业场景。"
-vibeCodingPrompt: "搭建自动产品图生成管线：1) 安装 SD WebUI 并启动 API 模式（--api）2) 编写 Python 脚本调用 /sdapi/v1/txt2img 接口 3) 设置 ControlNet 保持产品外形轮廓 4) 批量生成不同背景和风格的产品展示图 5) 集成背景移除和尺寸裁剪后处理 6) 输出适合电商平台的商品主图"
-pitfallGuide: "1. 显存要求：至少 6GB VRAM，推荐 8GB+，Mac 用户需要 16GB+ 统一内存\n2. 模型空间：基础模型约 2-7GB，LoRA 和 VAE 额外占用，SSD 预留 50GB+ 空间\n3. 扩展兼容性：社区扩展更新频繁，部分扩展可能与核心版本不兼容导致启动报错\n4. 生成质量：默认配置不一定最优，需要调试采样器、CFG Scale、步数等参数\n5. 种子锁定：商业使用需记录种子值以便复现和版本管理"
-targetAudience: ["内容创作者", "产品经理", "AI 研究者"]
-useCases: ["图像生成", "视频处理", "音频转文字", "内容创作"]
+vibeCodingRating: 4
+commercialSummary: "这是一个让用户通过简单界面生成高质量AI图像的工具，支持文字描述生成图片、图片修改图片以及海量扩展插件。适合设计师、内容创作者和任何想快速生成视觉素材的非技术人员。"
+vibeCodingPrompt: "1. 克隆仓库: git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+2. 进入目录: cd stable-diffusion-webui
+3. 运行启动脚本: ./webui.sh (Linux/Mac) 或 webui.bat (Windows)
+4. 浏览器打开 http://localhost:7860
+5. 在提示框输入文字，点击生成按钮即可获得图像。可调整参数如采样步数、CFG比例等。"
+pitfallGuide: "首次运行需要下载模型（约2-7GB），建议提前准备
+GPU显存低于4GB可能生成缓慢或失败，可开启--medvram或--lowvram参数
+扩展插件需谨慎安装，部分可能不兼容或导致崩溃
+Windows用户需确保Python和Git已正确安装并加入PATH"
+targetAudience: ["内容创作者", "设计师", "产品经理", "创业者"]
+useCases: ["快速生成营销海报和社交媒体配图", "为游戏或动画项目生成角色概念设计", "将草图或照片转化为不同艺术风格的作品", "批量生成产品展示图用于电商"]
 ---
-## SD WebUI 深度评测
+## 🤖 自动发现
 
-AUTOMATIC1111 的 SD WebUI 是 AI 图像生成领域装机量最高的工具，拥有最丰富的扩展生态。
+本项目由 AI 榜单自动发现系统收录。AI 图像生成的最流行工具，支持文生图、图生图和海量扩展
 
-### 核心优势
-- **功能全面**：文生图、图生图、Inpainting、Outpainting 一应俱全
-- **扩展丰富**：ControlNet、LoRA、ADetailer 等数百个扩展
-- **API 支持**：完善的 API 接口，适合自动化流水线
-
-### 使用场景
-- 电商产品图批量生成
-- 营销海报和素材制作
-- 建筑设计概念可视化
+> GitHub: [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) | ⭐ 150000 | ["image-generation",
