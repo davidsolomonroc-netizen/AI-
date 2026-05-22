@@ -1,0 +1,43 @@
+backend:
+  name: github
+  repo: davidsolomonroc-netizen/AI-
+  branch: main
+  base_url: https://api.github.com
+
+media_folder: "public/images"
+public_folder: "/images"
+
+collections:
+  - name: "projects"
+    label: "项目管理"
+    label_singular: "项目"
+    folder: "src/content/projects"
+    create: true
+    slug: "{{slug}}"
+    preview_path: "projects/{{slug}}"
+    fields:
+      - { label: "项目名称", name: "title", widget: "string" }
+      - { label: "一句话描述", name: "description", widget: "text" }
+      - { label: "发布日期", name: "publishDate", widget: "datetime", format: "YYYY-MM-DD" }
+      - { label: "精选推荐", name: "featured", widget: "boolean", default: false }
+      - { label: "GitHub 链接", name: "githubUrl", widget: "string" }
+      - { label: "GitHub 星数", name: "githubStars", widget: "number", valueType: "int" }
+      - { label: "项目作者", name: "githubOwner", widget: "string" }
+      - { label: "仓库名称", name: "githubRepo", widget: "string" }
+      - { label: "分类", name: "category", widget: "select", options:
+          - { label: "Agent 框架", value: "agent-framework" }
+          - { label: "开发工具", value: "dev-tools" }
+          - { label: "多模态", value: "multimodal" }
+          - { label: "代码生成", value: "code-generation" }
+          - { label: "工作流自动化", value: "workflow-automation" }
+          - { label: "数据分析", value: "data-analysis" }
+          - { label: "其他", value: "other" } }
+      - { label: "标签", name: "tags", widget: "list" }
+      - { label: "综合评分 (1-5)", name: "editorialScore", widget: "number", valueType: "int", min: 1, max: 5 }
+      - { label: "开箱即用度 (1-5)", name: "deploymentRating", widget: "number", valueType: "int", min: 1, max: 5 }
+      - { label: "Vibe Coding 友好度 (1-5)", name: "vibeCodingRating", widget: "number", valueType: "int", min: 1, max: 5 }
+      - { label: "商业价值摘要", name: "commercialSummary", widget: "text" }
+      - { label: "Vibe Coding 实战 Prompt", name: "vibeCodingPrompt", widget: "text" }
+      - { label: "避坑指南", name: "pitfallGuide", widget: "markdown" }
+      - { label: "详细评测 (Markdown)", name: "body", widget: "markdown", required: false }
+      - { label: "推广链接 (可选)", name: "affiliateLink", widget: "string", required: false }
