@@ -1,0 +1,28 @@
+name: 每周自动发现 AI 项目
+on:
+  schedule:
+    # 每周一凌晨 2:00 UTC = 北京时间 10:00
+    - cron: '0 2 * * 1'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 运行自动发现脚本
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # AI 分析 API（可选，不设置则生成模板草稿）
+          # DeepSeek: 注册 https://platform.deepseek.com (送 500 万 tokens)
+          AI_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          AI_API_URL: "https://api.deepseek.com/v1/chat/completions"
+          AI_MODEL: "deepseek-chat"
+        run: node scripts/discover-projects.mjs
+      - name: 提交新项目
+        run: |
+          git config user.name "AI 榜单 Bot"
+          git config user.email "bot@ai-leaderboard.pages.dev"
+          git add -A
+          git diff --staged --quiet || git commit -m "📡 每周自动发现: $(date +%Y-%m-%d)"
+          git push
