@@ -126,3 +126,64 @@ def detect_duplicates(segments: list[Segment], threshold: float = 0.7) -> list[C
             i += 1
 
     return sorted(cuts, key=lambda c: c.start)
+
+
+def _merge_intervals(intervals: list[CutInterval]) -> list[CutInterval]:
+    """Merge overlapping cut intervals."""
+    if not intervals:
+        return []
+    sorted_cuts = sorted(intervals, key=lambda c: (c.start, c.end))
+    merged = [sorted_cuts[0]]
+    for c in sorted_cuts[1:]:
+        last = merged[-1]
+        if c.start <= last.end:
+            last.end = max(last.end, c.end)
+            if c.reason not in last.reason:
+                last.reason += "; " + c.reason
+        else:
+            merged.append(c)
+    return merged
+
+
+def build_display(
+    segments: list[Segment],
+    cuts: list[CutInterval],
+    total_duration: float,
+) -> list[DisplaySegment]:
+    """Build display segments by inverting cut intervals to keep intervals."""
+    merged_cuts = _merge_intervals(cuts)
+
+    keep_intervals = []
+    cursor = 0.0
+    for c in merged_cuts:
+        if c.start > cursor:
+            keep_intervals.append((cursor, c.start))
+        cursor = max(cursor, c.end)
+    if cursor < total_duration:
+        keep_intervals.append((cursor, total_duration))
+
+    raw = []
+    for start, end in keep_intervals:
+        raw.append((start, end, "keep", ""))
+    for c in merged_cuts:
+        raw.append((c.start, c.end, "cut", c.reason))
+    raw.sort(key=lambda x: x[0])
+
+    result = []
+    for idx, (start, end, action, reason) in enumerate(raw):
+        texts = []
+        for seg in segments:
+            if seg.end > start and seg.start < end:
+                texts.append(seg.text)
+        text = " | ".join(texts) if texts else ("[静音]" if action == "cut" else "")
+
+        result.append(DisplaySegment(
+            index=idx,
+            start=start,
+            end=end,
+            text=text,
+            action=action,
+            reason=reason,
+        ))
+
+    return result

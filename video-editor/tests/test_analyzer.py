@@ -134,5 +134,76 @@ def test_detect_duplicate_chain():
     ]
     cuts = detect_duplicates(segs, threshold=0.7)
     assert len(cuts) == 2
-    assert cuts[0].start == 0.0   # seg0 deleted
-    assert cuts[1].start == 2.0   # seg1 deleted
+    assert cuts[0].start == 0.0
+    assert cuts[1].start == 2.0
+
+
+from analyzer import build_display, DisplaySegment
+
+
+def test_build_display_simple():
+    """基本场景：一个删除区间 + 两侧保留"""
+    segs = [
+        Segment(0.0, 2.0, "今天天气很好", []),
+        Segment(2.0, 3.0, "就是那个", []),
+        Segment(3.0, 5.0, "我们去散步吧", []),
+    ]
+    cuts = [
+        CutInterval(2.0, 3.0, "语气词: 就是"),
+    ]
+    result = build_display(segs, cuts, total_duration=5.0)
+
+    assert len(result) == 3
+    assert result[0].action == "keep"
+    assert result[0].start == 0.0
+    assert result[0].end == 2.0
+    assert result[1].action == "cut"
+    assert result[1].start == 2.0
+    assert result[1].end == 3.0
+    assert result[2].action == "keep"
+    assert result[2].start == 3.0
+    assert result[2].end == 5.0
+
+
+def test_build_display_overlapping_cuts():
+    """重叠的删除区间合并为一个"""
+    segs = [
+        Segment(0.0, 5.0, "嗯那个今天天气不错", []),
+    ]
+    cuts = [
+        CutInterval(0.0, 0.5, "语气词: 嗯"),
+        CutInterval(0.3, 0.8, "语气词: 那个"),
+    ]
+    result = build_display(segs, cuts, total_duration=5.0)
+    assert result[0].action == "cut"
+    assert result[0].start == 0.0
+    assert result[0].end == 0.8
+    assert result[1].action == "keep"
+
+
+def test_build_display_all_kept():
+    """没有 cuts 时全部保留为一段"""
+    segs = [
+        Segment(0.0, 2.0, "内容A", []),
+        Segment(2.0, 4.0, "内容B", []),
+    ]
+    result = build_display(segs, [], total_duration=4.0)
+    assert len(result) == 1
+    assert all(s.action == "keep" for s in result)
+    assert result[0].start == 0.0
+    assert result[0].end == 4.0
+
+
+def test_build_display_stats():
+    """验证 keep 和 cut 时长统计正确"""
+    segs = [
+        Segment(0.0, 3.0, "有用内容", []),
+        Segment(3.0, 4.0, "嗯", []),
+        Segment(4.0, 7.0, "更多内容", []),
+    ]
+    cuts = [CutInterval(3.0, 4.0, "语气词: 嗯")]
+    result = build_display(segs, cuts, total_duration=7.0)
+    keep_total = sum(s.end - s.start for s in result if s.action == "keep")
+    cut_total = sum(s.end - s.start for s in result if s.action == "cut")
+    assert 5.9 <= keep_total <= 6.1
+    assert 0.9 <= cut_total <= 1.1
