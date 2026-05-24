@@ -1,5 +1,7 @@
+import asyncio
 import json
 import os
+import re
 import uuid
 import shutil
 from pathlib import Path
@@ -9,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
 
 from analyzer import detect_filler, detect_silence, detect_duplicates, build_display, Segment, Word
-from processor import concat_videos, extract_segments, get_duration
+from processor import concat_videos, extract_segments, build_export_cmd, get_duration
 
 app = FastAPI()
 
@@ -162,9 +164,72 @@ async def export(
         raise HTTPException(400, "No concatenated video. Run /api/analyze first.")
 
     intervals = json.loads(keep_intervals)
-    output_path = str(OUTPUT_DIR / f"{session_id}.mp4")
-    extract_segments(concat_path, intervals, output_path)
+    if not intervals:
+        raise HTTPException(400, "No keep intervals specified")
 
+    output_path = str(OUTPUT_DIR / f"{session_id}.mp4")
+
+    async def generate():
+        yield _sse({
+            "step": "prepare",
+            "message": f"准备导出，共 {len(intervals)} 个片段...",
+        })
+
+        cmd, total_dur = build_export_cmd(concat_path, intervals, output_path)
+
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        time_pattern = re.compile(r"time=(\d+):(\d+):(\d+)\.(\d+)")
+        buf = ""
+        has_progress = False
+
+        while True:
+            chunk = await process.stderr.read(4096)
+            if not chunk:
+                break
+            buf += chunk.decode()
+            while "\r" in buf:
+                line, buf = buf.split("\r", 1)
+                match = time_pattern.search(line)
+                if match:
+                    has_progress = True
+                    h, m, s, cs = map(int, match.groups())
+                    current = h * 3600 + m * 60 + s + cs / 100.0
+                    pct = min(current / total_dur, 0.99) if total_dur > 0 else 0
+                    yield _sse({
+                        "step": "processing",
+                        "message": f"正在处理视频... {pct*100:.0f}%",
+                        "progress": round(pct, 3),
+                    })
+
+        await process.wait()
+        if process.returncode != 0:
+            raise HTTPException(500, f"ffmpeg exited with code {process.returncode}")
+
+        if not has_progress:
+            yield _sse({
+                "step": "processing",
+                "message": "正在处理视频... 100%",
+                "progress": 1.0,
+            })
+
+        yield _sse({
+            "step": "done",
+            "message": "导出完成",
+            "download_url": f"/api/download/{session_id}",
+        })
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@app.get("/api/download/{session_id}")
+async def download(session_id: str):
+    output_path = str(OUTPUT_DIR / f"{session_id}.mp4")
+    if not os.path.exists(output_path):
+        raise HTTPException(404, "Export file not found")
     return FileResponse(
         output_path,
         media_type="video/mp4",

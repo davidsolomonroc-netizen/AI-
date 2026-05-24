@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shutil
 import subprocess
 
@@ -96,3 +97,49 @@ def extract_segments(src: str, intervals: list[tuple[float, float]], output: str
         "-map", "[v]", "-map", "[a]",
         output
     ], check=True, capture_output=True)
+
+
+def build_export_cmd(src: str, intervals: list, output: str):
+    """Build ffmpeg command and return (cmd_list, total_duration).
+
+    Used by the SSE export endpoint to run ffmpeg with asyncio subprocess
+    and parse stderr for progress.
+    """
+    ffmpeg = _find_bin("ffmpeg")
+    n = len(intervals)
+    if n == 0:
+        raise ValueError("No intervals to keep")
+
+    total_dur = sum(end - start for start, end in intervals)
+
+    if n == 1:
+        start, end = intervals[0]
+        cmd = [
+            ffmpeg, "-y", "-ss", str(start), "-to", str(end),
+            "-i", src, "-c", "copy", output
+        ]
+    else:
+        video_parts = []
+        audio_parts = []
+        for i, (start, end) in enumerate(intervals):
+            video_parts.append(f"[0:v]trim={start}:{end},setpts=PTS-STARTPTS[v{i}]")
+            audio_parts.append(f"[0:a]atrim={start}:{end},asetpts=PTS-STARTPTS[a{i}]")
+
+        v_labels = "".join(f"[v{i}]" for i in range(n))
+        a_labels = "".join(f"[a{i}]" for i in range(n))
+
+        filter_complex = ";".join([
+            *video_parts,
+            *audio_parts,
+            f"{v_labels}concat=n={n}:v=1:a=0[v]",
+            f"{a_labels}concat=n={n}:v=0:a=1[a]",
+        ])
+
+        cmd = [
+            ffmpeg, "-y", "-i", src,
+            "-filter_complex", filter_complex,
+            "-map", "[v]", "-map", "[a]",
+            output
+        ]
+
+    return cmd, total_dur

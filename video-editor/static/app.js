@@ -21,49 +21,56 @@ const exportStatus = document.getElementById('export-status');
 const similaritySlider = document.getElementById('similarity-threshold');
 const similarityValue = document.getElementById('similarity-value');
 const toast = document.getElementById('toast');
+const progressArea = document.getElementById('progress-area');
+const progressFill = document.getElementById('progress-fill');
+const progressText = document.getElementById('progress-text');
 
 // --- Toast ---
-function showToast(msg, duration = 2000) {
+function showToast(msg, duration) {
+    duration = duration || 2000;
     toast.textContent = msg;
     toast.style.display = 'block';
-    setTimeout(() => toast.style.display = 'none', duration);
+    setTimeout(function () { toast.style.display = 'none'; }, duration);
 }
 
 // --- Format time ---
 function fmtTime(s) {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, '0')}`;
+    var m = Math.floor(s / 60);
+    var sec = Math.floor(s % 60);
+    return m + ':' + String(sec).padStart(2, '0');
 }
 
 // --- Similarity slider ---
-similaritySlider.addEventListener('input', () => {
+similaritySlider.addEventListener('input', function () {
     similarityValue.textContent = similaritySlider.value + '%';
 });
 
 // --- File upload / drag-drop ---
-dropZone.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', (e) => addFiles(e.target.files));
+dropZone.addEventListener('click', function () { fileInput.click(); });
+fileInput.addEventListener('change', function (e) { addFiles(e.target.files); });
 
-dropZone.addEventListener('dragover', (e) => {
+dropZone.addEventListener('dragover', function (e) {
     e.preventDefault();
     dropZone.classList.add('dragover');
 });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-dropZone.addEventListener('drop', (e) => {
+dropZone.addEventListener('dragleave', function () {
+    dropZone.classList.remove('dragover');
+});
+dropZone.addEventListener('drop', function (e) {
     e.preventDefault();
     dropZone.classList.remove('dragover');
     addFiles(e.dataTransfer.files);
 });
 
 function addFiles(newFiles) {
-    for (const f of newFiles) {
+    for (var i = 0; i < newFiles.length; i++) {
+        var f = newFiles[i];
         if (!f.type.startsWith('video/')) continue;
         files.push({
             name: f.name,
             duration: null,
             url: URL.createObjectURL(f),
-            file: f,
+            file: f
         });
     }
     if (files.length > 0) settings.style.display = 'block';
@@ -71,19 +78,19 @@ function addFiles(newFiles) {
 }
 
 function renderFileList() {
-    fileList.innerHTML = files.map((f, i) => `
-        <li class="file-item" draggable="true" data-index="${i}">
-            <span class="handle">≡</span>
-            <span class="name">${f.name}</span>
-            <span class="dur">${f.duration ? f.duration + 's' : ''}</span>
-            <button class="btn-play" data-index="${i}">▶</button>
-            <button class="btn-sm" data-index="${i}">✕</button>
-        </li>
-    `).join('');
+    fileList.innerHTML = files.map(function (f, i) {
+        return '<li class="file-item" draggable="true" data-index="' + i + '">' +
+            '<span class="handle">≡</span>' +
+            '<span class="name">' + f.name + '</span>' +
+            '<span class="dur">' + (f.duration ? f.duration + 's' : '') + '</span>' +
+            '<button class="btn-play" data-index="' + i + '">▶</button>' +
+            '<button class="btn-sm" data-index="' + i + '">✕</button>' +
+            '</li>';
+    }).join('');
 
     analyzeBtn.disabled = files.length === 0;
 
-    fileList.querySelectorAll('.file-item').forEach(item => {
+    fileList.querySelectorAll('.file-item').forEach(function (item) {
         item.addEventListener('dragstart', handleDragStart);
         item.addEventListener('dragover', handleDragOver);
         item.addEventListener('dragleave', handleDragLeave);
@@ -91,23 +98,20 @@ function renderFileList() {
         item.addEventListener('dragend', handleDragEnd);
     });
 
-    fileList.querySelectorAll('.btn-play').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+    fileList.querySelectorAll('.btn-play').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            const idx = parseInt(btn.dataset.index);
-            const f = files[idx];
+            var idx = parseInt(btn.dataset.index);
+            var f = files[idx];
             if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-            if (f.url) {
-                currentAudio = new Audio(f.url);
-                currentAudio.play();
-            }
+            if (f.url) { currentAudio = new Audio(f.url); currentAudio.play(); }
         });
     });
 
-    fileList.querySelectorAll('.btn-sm').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+    fileList.querySelectorAll('.btn-sm').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            const idx = parseInt(btn.dataset.index);
+            var idx = parseInt(btn.dataset.index);
             if (currentAudio) { currentAudio.pause(); currentAudio = null; }
             files.splice(idx, 1);
             if (files.length === 0) settings.style.display = 'none';
@@ -117,59 +121,36 @@ function renderFileList() {
 }
 
 // --- Drag and drop sorting ---
-let dragSrcIndex = null;
+var dragSrcIndex = null;
 
 function handleDragStart(e) {
     dragSrcIndex = parseInt(this.dataset.index);
     this.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
 }
-
 function handleDragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     this.classList.add('drag-over');
 }
-
-function handleDragLeave() {
-    this.classList.remove('drag-over');
-}
-
+function handleDragLeave() { this.classList.remove('drag-over'); }
 function handleDrop(e) {
     e.preventDefault();
     this.classList.remove('drag-over');
-    const targetIdx = parseInt(this.dataset.index);
+    var targetIdx = parseInt(this.dataset.index);
     if (dragSrcIndex !== null && dragSrcIndex !== targetIdx) {
-        const [moved] = files.splice(dragSrcIndex, 1);
+        var moved = files.splice(dragSrcIndex, 1)[0];
         files.splice(targetIdx, 0, moved);
         renderFileList();
     }
 }
-
 function handleDragEnd() {
     this.classList.remove('dragging');
-    fileList.querySelectorAll('.file-item').forEach(el => el.classList.remove('drag-over'));
+    fileList.querySelectorAll('.file-item').forEach(function (el) { el.classList.remove('drag-over'); });
     dragSrcIndex = null;
 }
 
-// --- Upload to server ---
-async function uploadFiles() {
-    const formData = new FormData();
-    for (const f of files) {
-        formData.append('files', f.file);
-    }
-    const resp = await fetch('/api/upload', { method: 'POST', body: formData });
-    if (!resp.ok) throw new Error('Upload failed');
-    const data = await resp.json();
-    sessionId = data.session_id;
-    return data;
-}
-
 // --- Progress bar ---
-const progressArea = document.getElementById('progress-area');
-const progressFill = document.getElementById('progress-fill');
-const progressText = document.getElementById('progress-text');
-
 function showProgress(msg, pct) {
     progressArea.style.display = 'block';
     progressText.textContent = msg;
@@ -177,111 +158,133 @@ function showProgress(msg, pct) {
         progressFill.style.width = (pct * 100) + '%';
     }
 }
-
 function hideProgress() {
     progressArea.style.display = 'none';
     progressFill.style.width = '0%';
 }
 
-// --- Analyze (SSE stream) ---
-analyzeBtn.addEventListener('click', async () => {
-    try {
-        analyzeBtn.disabled = true;
-        analyzeStatus.textContent = '正在上传...';
+// --- Upload to server ---
+function uploadFiles() {
+    var formData = new FormData();
+    for (var i = 0; i < files.length; i++) {
+        formData.append('files', files[i].file);
+    }
+    return fetch('/api/upload', { method: 'POST', body: formData })
+        .then(function (resp) {
+            if (!resp.ok) throw new Error('Upload failed');
+            return resp.json();
+        })
+        .then(function (data) {
+            sessionId = data.session_id;
+            return data;
+        });
+}
 
-        await uploadFiles();
+// --- Analyze (SSE) ---
+analyzeBtn.addEventListener('click', function () {
+    analyzeBtn.disabled = true;
+    analyzeStatus.textContent = '正在上传...';
+    showProgress('上传中...', 0.01);
+
+    uploadFiles().then(function () {
         analyzeStatus.textContent = '';
-        showProgress('准备分析...', 0);
+        showProgress('开始分析...', 0.03);
 
-        const formData = new FormData();
+        var formData = new FormData();
         formData.append('session_id', sessionId);
-        formData.append('file_order', JSON.stringify(files.map(f => f.name)));
+        formData.append('file_order', JSON.stringify(files.map(function (f) { return f.name; })));
         formData.append('silence_threshold', document.getElementById('silence-threshold').value);
         formData.append('similarity_threshold', similaritySlider.value / 100);
         formData.append('filler_words', document.getElementById('filler-words').value);
 
-        const resp = await fetch('/api/analyze', { method: 'POST', body: formData });
+        return fetch('/api/analyze', { method: 'POST', body: formData });
+    }).then(function (resp) {
         if (!resp.ok) {
-            const err = await resp.json();
-            throw new Error(err.detail || 'Analysis failed');
+            return resp.json().then(function (err) {
+                throw new Error(err.detail || 'Analysis failed');
+            });
         }
 
-        // Read SSE stream
-        const reader = resp.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
+        var reader = resp.body.getReader();
+        var decoder = new TextDecoder();
+        var buffer = '';
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+        function read() {
+            return reader.read().then(function (result) {
+                if (result.done) return;
 
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
+                buffer += decoder.decode(result.value, { stream: true });
+                var lines = buffer.split('\n');
+                buffer = lines.pop() || '';
 
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const event = JSON.parse(line.slice(6));
-
-                    if (event.step === 'concat') {
-                        showProgress(event.message, 0.02);
-                    } else if (event.step === 'transcribe') {
-                        showProgress(event.message, 0.05 + event.progress * 0.85);
-                    } else if (event.step === 'detect') {
-                        showProgress(event.message, 0.92);
-                    } else if (event.step === 'done') {
-                        showProgress('分析完成', 1);
-                        segments = event.segments;
-                        renderSegments();
-                        setTimeout(hideProgress, 800);
-                        reviewSection.style.display = 'block';
-                        reviewSection.scrollIntoView({ behavior: 'smooth' });
-                        analyzeStatus.textContent = '分析完成';
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i];
+                    if (line.indexOf('data: ') === 0) {
+                        var event = JSON.parse(line.slice(6));
+                        handleSSE(event);
                     }
                 }
-            }
+                return read();
+            });
         }
-
+        return read();
+    }).then(function () {
         analyzeBtn.disabled = false;
-    } catch (err) {
+    }).catch(function (err) {
         hideProgress();
         analyzeStatus.textContent = '错误: ' + err.message;
         analyzeBtn.disabled = false;
-    }
+    });
 });
+
+function handleSSE(event) {
+    if (event.step === 'concat') {
+        showProgress(event.message, 0.05);
+    } else if (event.step === 'transcribe') {
+        showProgress(event.message, 0.05 + event.progress * 0.85);
+    } else if (event.step === 'detect') {
+        showProgress(event.message, 0.92);
+    } else if (event.step === 'done') {
+        showProgress('分析完成', 1);
+        segments = event.segments;
+        renderSegments();
+        setTimeout(function () { hideProgress(); }, 1000);
+        reviewSection.style.display = 'block';
+        reviewSection.scrollIntoView({ behavior: 'smooth' });
+        analyzeStatus.textContent = '分析完成';
+    }
+}
 
 // --- Render segments ---
 function renderSegments() {
-    let keepTotal = 0, cutTotal = 0;
+    var keepTotal = 0, cutTotal = 0;
 
-    segmentList.innerHTML = segments.map(seg => {
-        const dur = seg.end - seg.start;
+    segmentList.innerHTML = segments.map(function (seg) {
+        var dur = seg.end - seg.start;
         if (seg.action === 'keep') keepTotal += dur;
         else cutTotal += dur;
 
-        return `
-            <li class="segment-item ${seg.action}" data-index="${seg.index}">
-                <span class="seg-time">${fmtTime(seg.start)} - ${fmtTime(seg.end)}</span>
-                <span class="seg-text" title="${escapeHtml(seg.text)}">${escapeHtml(seg.text) || '[静音]'}</span>
-                ${seg.reason ? `<span class="seg-reason">${escapeHtml(seg.reason)}</span>` : ''}
-                <label class="toggle">
-                    <input type="checkbox" ${seg.action === 'keep' ? 'checked' : ''} data-index="${seg.index}">
-                    <span class="slider"></span>
-                </label>
-            </li>
-        `;
+        return '<li class="segment-item ' + seg.action + '" data-index="' + seg.index + '">' +
+            '<span class="seg-time">' + fmtTime(seg.start) + ' - ' + fmtTime(seg.end) + '</span>' +
+            '<span class="seg-text" title="' + escapeHtml(seg.text) + '">' + (escapeHtml(seg.text) || '[静音]') + '</span>' +
+            (seg.reason ? '<span class="seg-reason">' + escapeHtml(seg.reason) + '</span>' : '') +
+            '<label class="toggle">' +
+            '<input type="checkbox" ' + (seg.action === 'keep' ? 'checked' : '') + ' data-index="' + seg.index + '">' +
+            '<span class="slider"></span>' +
+            '</label>' +
+            '</li>';
     }).join('');
 
     keepTime.textContent = fmtTime(keepTotal);
     cutTime.textContent = fmtTime(cutTotal);
     totalTime.textContent = fmtTime(keepTotal + cutTotal);
 
-    segmentList.querySelectorAll('input[type=checkbox]').forEach(cb => {
-        cb.addEventListener('change', () => {
-            const idx = parseInt(cb.dataset.index);
+    segmentList.querySelectorAll('input[type=checkbox]').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+            var idx = parseInt(cb.dataset.index);
             segments[idx].action = cb.checked ? 'keep' : 'cut';
             updateStats();
-            const item = cb.closest('.segment-item');
+            var item = cb.closest('.segment-item');
             item.classList.toggle('keep', cb.checked);
             item.classList.toggle('cut', !cb.checked);
         });
@@ -289,10 +292,10 @@ function renderSegments() {
 }
 
 function updateStats() {
-    let keepTotal = 0, cutTotal = 0;
-    for (const seg of segments) {
-        const dur = seg.end - seg.start;
-        if (seg.action === 'keep') keepTotal += dur;
+    var keepTotal = 0, cutTotal = 0;
+    for (var i = 0; i < segments.length; i++) {
+        var dur = segments[i].end - segments[i].start;
+        if (segments[i].action === 'keep') keepTotal += dur;
         else cutTotal += dur;
     }
     keepTime.textContent = fmtTime(keepTotal);
@@ -300,46 +303,92 @@ function updateStats() {
 }
 
 function escapeHtml(str) {
-    const div = document.createElement('div');
+    var div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
 }
 
 // --- Export ---
-exportBtn.addEventListener('click', async () => {
-    try {
-        exportBtn.disabled = true;
-        exportStatus.textContent = '正在导出...';
+exportBtn.addEventListener('click', function () {
+    exportBtn.disabled = true;
+    exportStatus.textContent = '';
+    showProgress('准备导出...', 0.01);
 
-        const keepIntervals = segments
-            .filter(s => s.action === 'keep')
-            .map(s => [s.start, s.end]);
+    var keepIntervals = segments
+        .filter(function (s) { return s.action === 'keep'; })
+        .map(function (s) { return [s.start, s.end]; });
 
-        const formData = new FormData();
-        formData.append('session_id', sessionId);
-        formData.append('keep_intervals', JSON.stringify(keepIntervals));
+    var formData = new FormData();
+    formData.append('session_id', sessionId);
+    formData.append('keep_intervals', JSON.stringify(keepIntervals));
 
-        const resp = await fetch('/api/export', { method: 'POST', body: formData });
-        if (!resp.ok) {
-            const err = await resp.json();
-            throw new Error(err.detail || 'Export failed');
-        }
+    fetch('/api/export', { method: 'POST', body: formData })
+        .then(function (resp) {
+            if (!resp.ok) {
+                return resp.json().then(function (err) {
+                    throw new Error(err.detail || 'Export failed');
+                });
+            }
 
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'output.mp4';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+            var reader = resp.body.getReader();
+            var decoder = new TextDecoder();
+            var buffer = '';
 
-        exportStatus.textContent = '导出完成';
-        exportBtn.disabled = false;
-        showToast('视频已导出');
-    } catch (err) {
-        exportStatus.textContent = '错误: ' + err.message;
-        exportBtn.disabled = false;
-    }
+            function read() {
+                return reader.read().then(function (result) {
+                    if (result.done) return;
+
+                    buffer += decoder.decode(result.value, { stream: true });
+                    var lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i];
+                        if (line.indexOf('data: ') === 0) {
+                            var event = JSON.parse(line.slice(6));
+                            handleExportSSE(event);
+                        }
+                    }
+                    return read();
+                });
+            }
+            return read();
+        })
+        .catch(function (err) {
+            hideProgress();
+            exportStatus.textContent = '错误: ' + err.message;
+            exportBtn.disabled = false;
+        });
 });
+
+function handleExportSSE(event) {
+    if (event.step === 'prepare') {
+        showProgress(event.message, 0.05);
+    } else if (event.step === 'processing') {
+        showProgress(event.message, 0.05 + event.progress * 0.9);
+    } else if (event.step === 'done') {
+        showProgress(event.message + '，开始下载...', 1);
+
+        fetch(event.download_url)
+            .then(function (resp) { return resp.blob(); })
+            .then(function (blob) {
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'output.mp4';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                hideProgress();
+                exportStatus.textContent = '导出完成';
+                exportBtn.disabled = false;
+                showToast('视频已导出');
+            })
+            .catch(function (err) {
+                hideProgress();
+                exportStatus.textContent = '下载错误: ' + err.message;
+                exportBtn.disabled = false;
+            });
+    }
+}
