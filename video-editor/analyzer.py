@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from difflib import SequenceMatcher
 
 
 @dataclass
@@ -94,5 +95,34 @@ def detect_silence(segments: list[Segment], threshold: float = 0.8) -> list[CutI
                 all_words[i].end, all_words[i + 1].start,
                 f"空白停顿 {gap:.1f}s"
             ))
+
+    return sorted(cuts, key=lambda c: c.start)
+
+
+def _similarity(a: str, b: str) -> float:
+    """Calculate text similarity ratio (0.0 to 1.0)."""
+    return SequenceMatcher(None, a, b).ratio()
+
+
+def detect_duplicates(segments: list[Segment], threshold: float = 0.7) -> list[CutInterval]:
+    """Detect duplicate sentences. When adjacent segments are similar,
+    keep the later one, cut the earlier one."""
+    cuts = []
+    i = 0
+    while i < len(segments) - 1:
+        j = i + 1
+        while j < len(segments) and _similarity(segments[i].text, segments[j].text) > threshold:
+            j += 1
+
+        chain_length = j - i
+        if chain_length > 1:
+            for k in range(i, j - 1):
+                cuts.append(CutInterval(
+                    segments[k].start, segments[k].end,
+                    f"重复: 与段{j} {_similarity(segments[k].text, segments[j-1].text):.0%}相似"
+                ))
+            i = j
+        else:
+            i += 1
 
     return sorted(cuts, key=lambda c: c.start)

@@ -95,3 +95,44 @@ def test_detect_silence_before_first_word():
     assert len(cuts) == 1
     assert cuts[0].start == 0.0
     assert cuts[0].end == 0.5
+
+
+from analyzer import detect_duplicates
+
+
+def test_detect_duplicate_adjacent():
+    """相邻句子相似度 > 70% 时标记前一句为删除"""
+    segs = [
+        Segment(0.0, 3.0, "今天我们来聊一聊AI工具", []),
+        Segment(3.0, 6.0, "今天我们来聊一聊AI工具的发展", []),
+        Segment(6.0, 9.0, "最近这个话题非常热门", []),
+    ]
+    cuts = detect_duplicates(segs, threshold=0.7)
+    assert len(cuts) == 1
+    assert cuts[0].start == 0.0
+    assert cuts[0].end == 3.0
+    assert "重复" in cuts[0].reason
+
+
+def test_detect_duplicate_not_similar():
+    """内容不同的相邻句子不标记"""
+    segs = [
+        Segment(0.0, 2.0, "今天天气很好", []),
+        Segment(2.0, 5.0, "我们来看看最新的AI工具", []),
+    ]
+    cuts = detect_duplicates(segs, threshold=0.7)
+    assert len(cuts) == 0
+
+
+def test_detect_duplicate_chain():
+    """三段连续相似，保留最后一段"""
+    segs = [
+        Segment(0.0, 2.0, "AI工具发展很快", []),
+        Segment(2.0, 4.0, "AI工具发展确实很快", []),
+        Segment(4.0, 6.0, "AI工具的发展速度确实很快", []),
+        Segment(6.0, 8.0, "下一个话题", []),
+    ]
+    cuts = detect_duplicates(segs, threshold=0.7)
+    assert len(cuts) == 2
+    assert cuts[0].start == 0.0   # seg0 deleted
+    assert cuts[1].start == 2.0   # seg1 deleted
