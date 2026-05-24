@@ -6,7 +6,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from analyzer import detect_filler, detect_silence, detect_duplicates, build_display, Segment, Word
 from processor import concat_videos, extract_segments, get_duration
@@ -32,18 +32,8 @@ def get_model():
     return _model
 
 
-def transcribe_video(video_path: str) -> list[Segment]:
-    """Run faster-whisper on a video and return segments with word timestamps."""
-    model = get_model()
-    raw_segments, _ = model.transcribe(video_path, word_timestamps=True, language="zh")
-    result = []
-    for seg in raw_segments:
-        words = []
-        if seg.words:
-            for w in seg.words:
-                words.append(Word(start=w.start, end=w.end, word=w.word.strip(), probability=w.probability))
-        result.append(Segment(start=seg.start, end=seg.end, text=seg.text.strip(), words=words))
-    return result
+def _sse(data: dict) -> str:
+    return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
 @app.get("/")
@@ -95,47 +85,67 @@ async def analyze(
         if not os.path.exists(p):
             raise HTTPException(400, f"File not found: {p}")
 
-    # Step 1: Concatenate
-    concat_path = str(session_dir / "_concat.mp4")
-    concat_videos(ordered_paths, concat_path)
+    custom_fillers = [w.strip() for w in filler_words.split(",") if w.strip()] or None
 
-    # Step 2: Transcribe
-    segments = transcribe_video(concat_path)
+    async def generate():
+        # Step 1: Concatenate
+        yield _sse({"step": "concat", "message": "拼接视频中..."})
+        concat_path = str(session_dir / "_concat.mp4")
+        concat_videos(ordered_paths, concat_path)
 
-    # Step 3: Detect
-    custom_fillers = [w.strip() for w in filler_words.split(",") if w.strip()]
-    if not custom_fillers:
-        custom_fillers = None
+        # Step 2: Get total duration
+        total_dur = get_duration(concat_path)
 
-    filler_cuts = detect_filler(segments, custom_fillers)
-    silence_cuts = detect_silence(segments, silence_threshold)
-    dup_cuts = detect_duplicates(segments, similarity_threshold)
+        # Step 3: Transcribe with progress
+        yield _sse({"step": "transcribe", "progress": 0, "message": "语音识别中..."})
 
-    all_cuts = filler_cuts + silence_cuts + dup_cuts
+        model = get_model()
+        raw_segments, _ = model.transcribe(concat_path, word_timestamps=True, language="zh")
+        segments = []
+        for seg in raw_segments:
+            words = []
+            if seg.words:
+                for w in seg.words:
+                    words.append(Word(start=w.start, end=w.end, word=w.word.strip(), probability=w.probability))
+            segments.append(Segment(start=seg.start, end=seg.end, text=seg.text.strip(), words=words))
 
-    # Step 4: Build display
-    total_dur = get_duration(concat_path)
-    display = build_display(segments, all_cuts, total_dur)
+            progress = min(seg.end / total_dur, 0.95) if total_dur > 0 else 0
+            yield _sse({"step": "transcribe", "progress": round(progress, 3), "message": f"语音识别中 {progress*100:.0f}%..."})
 
-    keep_dur = sum(s.end - s.start for s in display if s.action == "keep")
-    cut_dur = sum(s.end - s.start for s in display if s.action == "cut")
+        # Step 4: Detect
+        yield _sse({"step": "detect", "message": "检测语气词和重复段落..."})
 
-    return {
-        "segments": [
-            {
-                "index": s.index,
-                "start": round(s.start, 2),
-                "end": round(s.end, 2),
-                "text": s.text,
-                "action": s.action,
-                "reason": s.reason,
-            }
-            for s in display
-        ],
-        "total_duration": round(total_dur, 1),
-        "keep_duration": round(keep_dur, 1),
-        "cut_duration": round(cut_dur, 1),
-    }
+        filler_cuts = detect_filler(segments, custom_fillers)
+        silence_cuts = detect_silence(segments, silence_threshold)
+        dup_cuts = detect_duplicates(segments, similarity_threshold)
+        all_cuts = filler_cuts + silence_cuts + dup_cuts
+
+        # Step 5: Build display
+        display = build_display(segments, all_cuts, total_dur)
+
+        keep_dur = sum(s.end - s.start for s in display if s.action == "keep")
+        cut_dur = sum(s.end - s.start for s in display if s.action == "cut")
+
+        result = {
+            "step": "done",
+            "segments": [
+                {
+                    "index": s.index,
+                    "start": round(s.start, 2),
+                    "end": round(s.end, 2),
+                    "text": s.text,
+                    "action": s.action,
+                    "reason": s.reason,
+                }
+                for s in display
+            ],
+            "total_duration": round(total_dur, 1),
+            "keep_duration": round(keep_dur, 1),
+            "cut_duration": round(cut_dur, 1),
+        }
+        yield _sse(result)
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
 
 
 @app.post("/api/export")

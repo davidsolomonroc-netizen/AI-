@@ -165,14 +165,46 @@ async function uploadFiles() {
     return data;
 }
 
-// --- Analyze ---
+// --- Upload to server ---
+async function uploadFiles() {
+    const formData = new FormData();
+    for (const f of files) {
+        formData.append('files', f.file);
+    }
+    const resp = await fetch('/api/upload', { method: 'POST', body: formData });
+    if (!resp.ok) throw new Error('Upload failed');
+    const data = await resp.json();
+    sessionId = data.session_id;
+    return data;
+}
+
+// --- Progress bar ---
+const progressArea = document.getElementById('progress-area');
+const progressFill = document.getElementById('progress-fill');
+const progressText = document.getElementById('progress-text');
+
+function showProgress(msg, pct) {
+    progressArea.style.display = 'block';
+    progressText.textContent = msg;
+    if (pct !== undefined) {
+        progressFill.style.width = (pct * 100) + '%';
+    }
+}
+
+function hideProgress() {
+    progressArea.style.display = 'none';
+    progressFill.style.width = '0%';
+}
+
+// --- Analyze (SSE stream) ---
 analyzeBtn.addEventListener('click', async () => {
     try {
         analyzeBtn.disabled = true;
         analyzeStatus.textContent = '正在上传...';
 
         await uploadFiles();
-        analyzeStatus.textContent = '正在语音识别 (可能需要几分钟)...';
+        analyzeStatus.textContent = '';
+        showProgress('准备分析...', 0);
 
         const formData = new FormData();
         formData.append('session_id', sessionId);
@@ -187,15 +219,45 @@ analyzeBtn.addEventListener('click', async () => {
             throw new Error(err.detail || 'Analysis failed');
         }
 
-        const data = await resp.json();
-        segments = data.segments;
-        renderSegments();
+        // Read SSE stream
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
 
-        reviewSection.style.display = 'block';
-        reviewSection.scrollIntoView({ behavior: 'smooth' });
-        analyzeStatus.textContent = '分析完成';
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const event = JSON.parse(line.slice(6));
+
+                    if (event.step === 'concat') {
+                        showProgress(event.message, 0.02);
+                    } else if (event.step === 'transcribe') {
+                        showProgress(event.message, 0.05 + event.progress * 0.85);
+                    } else if (event.step === 'detect') {
+                        showProgress(event.message, 0.92);
+                    } else if (event.step === 'done') {
+                        showProgress('分析完成', 1);
+                        segments = event.segments;
+                        renderSegments();
+                        setTimeout(hideProgress, 800);
+                        reviewSection.style.display = 'block';
+                        reviewSection.scrollIntoView({ behavior: 'smooth' });
+                        analyzeStatus.textContent = '分析完成';
+                    }
+                }
+            }
+        }
+
         analyzeBtn.disabled = false;
     } catch (err) {
+        hideProgress();
         analyzeStatus.textContent = '错误: ' + err.message;
         analyzeBtn.disabled = false;
     }
