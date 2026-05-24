@@ -66,3 +66,33 @@ def detect_filler(segments: list[Segment], filler_words: list[str] = None) -> li
                 cuts.append(CutInterval(w.start, w.end, f"语气词: {w.word.strip()}"))
 
     return sorted(cuts, key=lambda c: c.start)
+
+
+def detect_silence(segments: list[Segment], threshold: float = 0.8) -> list[CutInterval]:
+    """Detect silence gaps between words that exceed threshold (seconds)."""
+    cuts = []
+    all_words = []
+    for seg in segments:
+        if seg.words:
+            all_words.extend(seg.words)
+
+    if not all_words:
+        return cuts
+
+    # Gap before first word
+    if all_words[0].start > threshold:
+        cuts.append(CutInterval(
+            0.0, all_words[0].start,
+            f"空白停顿 {all_words[0].start:.1f}s"
+        ))
+
+    # Gaps between words
+    for i in range(len(all_words) - 1):
+        gap = all_words[i + 1].start - all_words[i].end
+        if gap > threshold:
+            cuts.append(CutInterval(
+                all_words[i].end, all_words[i + 1].start,
+                f"空白停顿 {gap:.1f}s"
+            ))
+
+    return sorted(cuts, key=lambda c: c.start)

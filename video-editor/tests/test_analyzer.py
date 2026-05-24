@@ -49,3 +49,49 @@ def test_no_filler_in_clean_speech():
     ]
     cuts = detect_filler(segs, FILLER_LIST)
     assert len(cuts) == 0
+
+
+from analyzer import detect_silence
+
+
+def test_detect_silence_between_words():
+    """词间距 > 0.8s 的空白标记为删除"""
+    segs = [
+        make_seg(0.0, 4.0, "今天  天气不错", [
+            (0.0, 0.4, "今天"),
+            (1.5, 1.9, "天气"),  # gap from 0.4 to 1.5 = 1.1s > 0.8s
+            (2.0, 2.5, "不错"),
+        ]),
+    ]
+    cuts = detect_silence(segs, threshold=0.8)
+    assert len(cuts) == 1
+    assert cuts[0].start == 0.4
+    assert cuts[0].end == 1.5
+    assert "1.1s" in cuts[0].reason
+
+
+def test_detect_silence_short_gap_ignored():
+    """词间距 <= 阈值不标记"""
+    segs = [
+        make_seg(0.0, 2.0, "今天天气不错", [
+            (0.0, 0.4, "今天"),
+            (0.8, 1.2, "天气"),  # gap 0.4s < 0.8s threshold
+            (1.3, 1.8, "不错"),
+        ]),
+    ]
+    cuts = detect_silence(segs, threshold=0.8)
+    assert len(cuts) == 0
+
+
+def test_detect_silence_before_first_word():
+    """第一段开始前的空白也检测"""
+    segs = [
+        make_seg(0.0, 2.0, "今天不错", [
+            (0.5, 0.9, "今天"),  # 0.0 to 0.5 gap
+            (1.0, 1.5, "不错"),
+        ]),
+    ]
+    cuts = detect_silence(segs, threshold=0.4)
+    assert len(cuts) == 1
+    assert cuts[0].start == 0.0
+    assert cuts[0].end == 0.5
