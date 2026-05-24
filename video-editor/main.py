@@ -63,10 +63,13 @@ async def upload(files: list[UploadFile] = File(...)):
         filepath = session_dir / safe_name
         with open(filepath, "wb") as buf:
             shutil.copyfileobj(f.file, buf)
-        dur = get_duration(str(filepath))
+        try:
+            dur = get_duration(str(filepath))
+        except Exception:
+            dur = 0
         saved.append({
             "filename": safe_name,
-            "duration": round(dur, 1),
+            "duration": round(dur, 1) if dur else None,
             "path": str(filepath),
         })
 
