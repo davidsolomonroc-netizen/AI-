@@ -165,19 +165,6 @@ async function uploadFiles() {
     return data;
 }
 
-// --- Upload to server ---
-async function uploadFiles() {
-    const formData = new FormData();
-    for (const f of files) {
-        formData.append('files', f.file);
-    }
-    const resp = await fetch('/api/upload', { method: 'POST', body: formData });
-    if (!resp.ok) throw new Error('Upload failed');
-    const data = await resp.json();
-    sessionId = data.session_id;
-    return data;
-}
-
 // --- Progress bar ---
 const progressArea = document.getElementById('progress-area');
 const progressFill = document.getElementById('progress-fill');
