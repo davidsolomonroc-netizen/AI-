@@ -24,6 +24,9 @@ const toast = document.getElementById('toast');
 const progressArea = document.getElementById('progress-area');
 const progressFill = document.getElementById('progress-fill');
 const progressText = document.getElementById('progress-text');
+const previewPlayer = document.getElementById('preview-player');
+const previewVideo = document.getElementById('preview-video');
+const previewLabel = document.getElementById('preview-label');
 
 // --- Toast ---
 function showToast(msg, duration) {
@@ -38,6 +41,62 @@ function fmtTime(s) {
     var m = Math.floor(s / 60);
     var sec = Math.floor(s % 60);
     return m + ':' + String(sec).padStart(2, '0');
+}
+
+// --- Sound effects ---
+var audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function playSuccessSound() {
+    initAudio();
+    var now = audioCtx.currentTime;
+    [523.25, 659.25].forEach(function (freq, i) {
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.15, now + i * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.12);
+        osc.stop(now + i * 0.12 + 0.35);
+    });
+}
+
+function playErrorSound() {
+    initAudio();
+    var now = audioCtx.currentTime;
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = 150;
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+}
+
+function playToggleSound() {
+    initAudio();
+    var now = audioCtx.currentTime;
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 660;
+    gain.gain.setValueAtTime(0.04, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.06);
 }
 
 // --- Similarity slider ---
@@ -234,6 +293,7 @@ analyzeBtn.addEventListener('click', function () {
         hideProgress();
         analyzeStatus.textContent = '错误: ' + err.message;
         analyzeBtn.disabled = false;
+        playErrorSound();
     });
 });
 
@@ -252,6 +312,7 @@ function handleSSE(event) {
         reviewSection.style.display = 'block';
         reviewSection.scrollIntoView({ behavior: 'smooth' });
         analyzeStatus.textContent = '分析完成';
+        playSuccessSound();
     }
 }
 
@@ -287,6 +348,31 @@ function renderSegments() {
             var item = cb.closest('.segment-item');
             item.classList.toggle('keep', cb.checked);
             item.classList.toggle('cut', !cb.checked);
+            playToggleSound();
+        });
+    });
+
+    segmentList.querySelectorAll('.segment-item').forEach(function (item) {
+        item.addEventListener('click', function (e) {
+            if (e.target.tagName === 'INPUT') return;
+            var idx = parseInt(item.dataset.index);
+            var seg = segments[idx];
+
+            previewVideo.src = '/api/video/' + sessionId;
+            previewPlayer.style.display = 'block';
+            previewLabel.textContent = fmtTime(seg.start) + ' ~ ' + fmtTime(seg.end) + ' — ' + (seg.text || '[静音]');
+            previewVideo.currentTime = seg.start;
+            previewVideo.play();
+
+            var stopAt = seg.end;
+            function checkTime() {
+                if (previewVideo.currentTime >= stopAt) {
+                    previewVideo.pause();
+                    previewVideo.removeEventListener('timeupdate', checkTime);
+                }
+            }
+            previewVideo.removeEventListener('timeupdate', checkTime);
+            previewVideo.addEventListener('timeupdate', checkTime);
         });
     });
 }
@@ -358,6 +444,7 @@ exportBtn.addEventListener('click', function () {
             hideProgress();
             exportStatus.textContent = '错误: ' + err.message;
             exportBtn.disabled = false;
+            playErrorSound();
         });
 });
 
@@ -384,11 +471,13 @@ function handleExportSSE(event) {
                 exportStatus.textContent = '导出完成';
                 exportBtn.disabled = false;
                 showToast('视频已导出');
+                playSuccessSound();
             })
             .catch(function (err) {
                 hideProgress();
                 exportStatus.textContent = '下载错误: ' + err.message;
                 exportBtn.disabled = false;
+                playErrorSound();
             });
     }
 }

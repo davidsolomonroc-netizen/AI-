@@ -150,6 +150,22 @@ h2 { font-size: 18px; margin-bottom: 12px; color: #1d1d1f; }
     border-radius: 8px; font-size: 14px; z-index: 100;
 }
 
+/* Video preview player */
+#preview-player {
+    margin-bottom: 16px;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+#preview-video { width: 100%; max-height: 300px; display: block; }
+#preview-label {
+    display: block;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 13px;
+    background: rgba(0,0,0,0.8);
+}
+
 /* Progress bar */
 #progress-area {
     margin-top: 16px;

@@ -235,3 +235,11 @@ async def download(session_id: str):
         media_type="video/mp4",
         filename="output.mp4",
     )
+
+
+@app.get("/api/video/{session_id}")
+async def serve_video(session_id: str):
+    concat_path = UPLOAD_DIR / session_id / "_concat.mp4"
+    if not concat_path.exists():
+        raise HTTPException(404, "Video not found")
+    return FileResponse(str(concat_path), media_type="video/mp4")

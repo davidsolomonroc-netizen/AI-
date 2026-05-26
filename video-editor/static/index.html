@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>口播视频自动剪辑</title>
-    <link rel="stylesheet" href="/static/style.css?v=3">
+    <link rel="stylesheet" href="/static/style.css?v=4">
 </head>
 <body>
     <div id="app">
@@ -60,6 +60,10 @@
                 <span class="stat cut">删除: <strong id="cut-time">0:00</strong></span>
                 <span class="stat total">总时长: <strong id="total-time">0:00</strong></span>
             </div>
+            <div id="preview-player" style="display:none;">
+                <video id="preview-video" src="" controls></video>
+                <span id="preview-label"></span>
+            </div>
             <ul id="segment-list"></ul>
             <div class="actions">
                 <button id="export-btn">导出视频</button>
@@ -69,6 +73,6 @@
 
         <div id="toast" class="toast" style="display:none;"></div>
     </div>
-    <script src="/static/app.js?v=3"></script>
+    <script src="/static/app.js?v=4"></script>
 </body>
 </html>
