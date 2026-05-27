@@ -1,6 +1,5 @@
 import uuid
-from datetime import datetime
-from sqlalchemy import Column, String, Text, BigInteger, Float, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, BigInteger, Float, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel as PydanticBase
@@ -21,8 +20,8 @@ class Creator(Base):
     social_links = Column(JSONB, default={})
     category_id = Column(String(50))
     tags = Column(JSONB, default=[])
-    last_updated = Column(DateTime, default=datetime.utcnow)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    last_updated = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=func.now())
 
     emails = relationship("Email", back_populates="creator", cascade="all, delete-orphan")
 
@@ -35,10 +34,12 @@ class Email(Base):
     email = Column(String(500), nullable=False)
     confidence_score = Column(Float, default=0)
     source = Column(String(100))
-    verified_at = Column(DateTime, default=datetime.utcnow)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    verified_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=func.now())
 
     creator = relationship("Creator", back_populates="emails")
+
+    __table_args__ = (UniqueConstraint("creator_id", "email"),)
 
 
 class SimilarityCache(Base):
@@ -48,7 +49,9 @@ class SimilarityCache(Base):
     source_creator_id = Column(UUID(as_uuid=True), ForeignKey("creators.id", ondelete="CASCADE"), nullable=False)
     target_creator_id = Column(UUID(as_uuid=True), ForeignKey("creators.id", ondelete="CASCADE"), nullable=False)
     score = Column(Float, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=func.now())
+
+    __table_args__ = (UniqueConstraint("source_creator_id", "target_creator_id", name="idx_similarity_pair"),)
 
 
 # Pydantic request/response models
