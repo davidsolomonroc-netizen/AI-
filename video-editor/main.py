@@ -12,6 +12,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 
 from analyzer import detect_filler, detect_silence, detect_duplicates, build_display, Segment, Word
 from processor import concat_videos, extract_segments, build_export_cmd, get_duration
+from style_judy import JUDY_PARAMS, extract_keypoints, extract_keywords
 
 app = FastAPI()
 
@@ -75,6 +76,7 @@ async def analyze(
     silence_threshold: float = Form(0.8),
     similarity_threshold: float = Form(0.7),
     filler_words: str = Form(""),
+    style: str = Form(""),
 ):
     session_dir = UPLOAD_DIR / session_id
     if not session_dir.exists():
@@ -86,6 +88,12 @@ async def analyze(
     for p in ordered_paths:
         if not os.path.exists(p):
             raise HTTPException(400, f"File not found: {p}")
+
+    # Apply style preset if specified
+    if style == "judy":
+        silence_threshold = JUDY_PARAMS["silence_threshold"]
+        similarity_threshold = JUDY_PARAMS["similarity_threshold"]
+        filler_words = JUDY_PARAMS["filler_words"]
 
     custom_fillers = [w.strip() for w in filler_words.split(",") if w.strip()] or None
 
@@ -125,6 +133,13 @@ async def analyze(
         # Step 5: Build display
         display = build_display(segments, all_cuts, total_dur)
 
+        # Step 6: Extract key points for style modes
+        keywords = []
+        highlights = []
+        if style == "judy":
+            keywords = extract_keywords(segments, topk=12)
+            highlights = extract_keypoints(segments)
+
         keep_dur = sum(s.end - s.start for s in display if s.action == "keep")
         cut_dur = sum(s.end - s.start for s in display if s.action == "cut")
 
@@ -144,6 +159,8 @@ async def analyze(
             "total_duration": round(total_dur, 1),
             "keep_duration": round(keep_dur, 1),
             "cut_duration": round(cut_dur, 1),
+            "keywords": keywords,
+            "highlights": highlights,
         }
         yield _sse(result)
 
@@ -154,6 +171,7 @@ async def analyze(
 async def export(
     session_id: str = Form(...),
     keep_intervals: str = Form(...),
+    highlights: str = Form("[]"),
 ):
     session_dir = UPLOAD_DIR / session_id
     if not session_dir.exists():
@@ -167,6 +185,8 @@ async def export(
     if not intervals:
         raise HTTPException(400, "No keep intervals specified")
 
+    hl_list = json.loads(highlights) if highlights else []
+
     output_path = str(OUTPUT_DIR / f"{session_id}.mp4")
 
     async def generate():
@@ -175,7 +195,7 @@ async def export(
             "message": f"准备导出，共 {len(intervals)} 个片段...",
         })
 
-        cmd, total_dur = build_export_cmd(concat_path, intervals, output_path)
+        cmd, total_dur = build_export_cmd(concat_path, intervals, output_path, hl_list)
 
         process = await asyncio.create_subprocess_exec(
             *cmd,

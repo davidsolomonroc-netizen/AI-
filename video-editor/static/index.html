@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>口播视频自动剪辑</title>
-    <link rel="stylesheet" href="/static/style.css?v=4">
+    <link rel="stylesheet" href="/static/style.css?v=6">
 </head>
 <body>
     <div id="app">
@@ -12,6 +12,12 @@
             <h1>口播视频自动剪辑</h1>
             <p class="subtitle">上传素材 → 自动检测 → 确认导出</p>
         </header>
+
+        <!-- Mode Switcher -->
+        <nav id="mode-tabs">
+            <button id="tab-rough" class="mode-tab active">智能粗剪</button>
+            <button id="tab-judy" class="mode-tab">跟剪 Judy</button>
+        </nav>
 
         <!-- Upload Section -->
         <section id="upload-section">
@@ -60,6 +66,10 @@
                 <span class="stat cut">删除: <strong id="cut-time">0:00</strong></span>
                 <span class="stat total">总时长: <strong id="total-time">0:00</strong></span>
             </div>
+            <div id="keywords-area" style="display:none;">
+                <span class="keywords-label">关键词高亮：</span>
+                <span id="keywords-list"></span>
+            </div>
             <div id="preview-player" style="display:none;">
                 <video id="preview-video" src="" controls></video>
                 <span id="preview-label"></span>
@@ -73,6 +83,6 @@
 
         <div id="toast" class="toast" style="display:none;"></div>
     </div>
-    <script src="/static/app.js?v=4"></script>
+    <script src="/static/app.js?v=6"></script>
 </body>
 </html>

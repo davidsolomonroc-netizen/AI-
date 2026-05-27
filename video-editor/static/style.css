@@ -15,11 +15,62 @@ body {
 
 header {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 16px;
 }
 
 header h1 { font-size: 28px; margin-bottom: 4px; }
 .subtitle { color: #86868b; font-size: 14px; }
+
+/* Mode tabs */
+#mode-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.mode-tab {
+    flex: 1;
+    padding: 12px 0;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    background: white;
+    color: #86868b;
+    transition: all 0.2s;
+}
+.mode-tab.active {
+    background: #007aff;
+    color: white;
+}
+.mode-tab:not(.active):hover {
+    background: #f0f0f5;
+    color: #1d1d1f;
+}
+
+/* Keywords display */
+#keywords-area {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: #fff9e6;
+    border-radius: 8px;
+    font-size: 14px;
+}
+.keywords-label { color: #b8860b; font-weight: 600; margin-right: 6px; }
+#keywords-list { color: #1d1d1f; }
+#keywords-list .kw-tag {
+    display: inline-block;
+    background: #f0c040;
+    color: #1d1d1f;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 4px;
+    margin: 2px 3px;
+    font-size: 13px;
+}
 
 section { margin-bottom: 32px; }
 h2 { font-size: 18px; margin-bottom: 12px; color: #1d1d1f; }

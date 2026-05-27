@@ -3,6 +3,9 @@ let files = [];
 let sessionId = null;
 let segments = [];
 let currentAudio = null;
+let currentStyle = '';
+let keywords = [];
+let highlights = [];
 
 // --- DOM refs ---
 const dropZone = document.getElementById('drop-zone');
@@ -27,6 +30,10 @@ const progressText = document.getElementById('progress-text');
 const previewPlayer = document.getElementById('preview-player');
 const previewVideo = document.getElementById('preview-video');
 const previewLabel = document.getElementById('preview-label');
+const tabRough = document.getElementById('tab-rough');
+const tabJudy = document.getElementById('tab-judy');
+const keywordsArea = document.getElementById('keywords-area');
+const keywordsList = document.getElementById('keywords-list');
 
 // --- Toast ---
 function showToast(msg, duration) {
@@ -102,6 +109,28 @@ function playToggleSound() {
 // --- Similarity slider ---
 similaritySlider.addEventListener('input', function () {
     similarityValue.textContent = similaritySlider.value + '%';
+});
+
+// --- Mode tabs ---
+tabRough.addEventListener('click', function () {
+    if (currentStyle === '') return;
+    currentStyle = '';
+    tabRough.classList.add('active');
+    tabJudy.classList.remove('active');
+    keywordsArea.style.display = 'none';
+    keywords = [];
+    highlights = [];
+});
+tabJudy.addEventListener('click', function () {
+    if (currentStyle === 'judy') return;
+    currentStyle = 'judy';
+    tabJudy.classList.add('active');
+    tabRough.classList.remove('active');
+    // Update settings to Judy defaults
+    document.getElementById('silence-threshold').value = '0.3';
+    similaritySlider.value = '55';
+    similarityValue.textContent = '55%';
+    document.getElementById('filler-words').value = '嗯,呃,啊,哦,啧,就是,那个,就是说,然后呢,对吧,说白了,其实吧,你懂吧,怎么样,这个';
 });
 
 // --- File upload / drag-drop ---
@@ -255,6 +284,9 @@ analyzeBtn.addEventListener('click', function () {
         formData.append('silence_threshold', document.getElementById('silence-threshold').value);
         formData.append('similarity_threshold', similaritySlider.value / 100);
         formData.append('filler_words', document.getElementById('filler-words').value);
+        if (currentStyle) {
+            formData.append('style', currentStyle);
+        }
 
         return fetch('/api/analyze', { method: 'POST', body: formData });
     }).then(function (resp) {
@@ -307,6 +339,9 @@ function handleSSE(event) {
     } else if (event.step === 'done') {
         showProgress('分析完成', 1);
         segments = event.segments;
+        keywords = event.keywords || [];
+        highlights = event.highlights || [];
+        renderKeywords();
         renderSegments();
         setTimeout(function () { hideProgress(); }, 1000);
         reviewSection.style.display = 'block';
@@ -314,6 +349,17 @@ function handleSSE(event) {
         analyzeStatus.textContent = '分析完成';
         playSuccessSound();
     }
+}
+
+function renderKeywords() {
+    if (currentStyle !== 'judy' || keywords.length === 0) {
+        keywordsArea.style.display = 'none';
+        return;
+    }
+    keywordsArea.style.display = 'block';
+    keywordsList.innerHTML = keywords.map(function (kw) {
+        return '<span class="kw-tag">' + escapeHtml(kw) + '</span>';
+    }).join('');
 }
 
 // --- Render segments ---
@@ -407,6 +453,9 @@ exportBtn.addEventListener('click', function () {
     var formData = new FormData();
     formData.append('session_id', sessionId);
     formData.append('keep_intervals', JSON.stringify(keepIntervals));
+    if (currentStyle === 'judy' && highlights.length > 0) {
+        formData.append('highlights', JSON.stringify(highlights));
+    }
 
     fetch('/api/export', { method: 'POST', body: formData })
         .then(function (resp) {

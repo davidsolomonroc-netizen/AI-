@@ -99,11 +99,17 @@ def extract_segments(src: str, intervals: list[tuple[float, float]], output: str
     ], check=True, capture_output=True)
 
 
-def build_export_cmd(src: str, intervals: list, output: str):
+FONT_PATH = "/System/Library/Fonts/STHeiti Medium.ttc"
+
+
+def build_export_cmd(src: str, intervals: list, output: str, highlights: list = None):
     """Build ffmpeg command and return (cmd_list, total_duration).
 
     Used by the SSE export endpoint to run ffmpeg with asyncio subprocess
     and parse stderr for progress.
+
+    If highlights are provided (list of {start, end, word}), drawtext overlays
+    are added with yellow bold text positioned near the top of the frame.
     """
     ffmpeg = _find_bin("ffmpeg")
     n = len(intervals)
@@ -111,35 +117,61 @@ def build_export_cmd(src: str, intervals: list, output: str):
         raise ValueError("No intervals to keep")
 
     total_dur = sum(end - start for start, end in intervals)
+    has_overlays = highlights and len(highlights) > 0
 
-    if n == 1:
+    if n == 1 and not has_overlays:
         start, end = intervals[0]
         cmd = [
             ffmpeg, "-y", "-ss", str(start), "-to", str(end),
             "-i", src, "-c", "copy", output
         ]
-    else:
-        video_parts = []
-        audio_parts = []
-        for i, (start, end) in enumerate(intervals):
-            video_parts.append(f"[0:v]trim={start}:{end},setpts=PTS-STARTPTS[v{i}]")
-            audio_parts.append(f"[0:a]atrim={start}:{end},asetpts=PTS-STARTPTS[a{i}]")
+        return cmd, total_dur
 
-        v_labels = "".join(f"[v{i}]" for i in range(n))
-        a_labels = "".join(f"[a{i}]" for i in range(n))
+    # Build video/audio trim + concat
+    video_parts = []
+    audio_parts = []
+    for i, (start, end) in enumerate(intervals):
+        video_parts.append(f"[0:v]trim={start}:{end},setpts=PTS-STARTPTS[v{i}]")
+        audio_parts.append(f"[0:a]atrim={start}:{end},asetpts=PTS-STARTPTS[a{i}]")
 
-        filter_complex = ";".join([
-            *video_parts,
-            *audio_parts,
-            f"{v_labels}concat=n={n}:v=1:a=0[v]",
-            f"{a_labels}concat=n={n}:v=0:a=1[a]",
-        ])
+    v_labels = "".join(f"[v{i}]" for i in range(n))
+    a_labels = "".join(f"[a{i}]" for i in range(n))
 
-        cmd = [
-            ffmpeg, "-y", "-i", src,
-            "-filter_complex", filter_complex,
-            "-map", "[v]", "-map", "[a]",
-            output
-        ]
+    filter_parts = [
+        *video_parts,
+        *audio_parts,
+        f"{v_labels}concat=n={n}:v=1:a=0[v_concat]",
+        f"{a_labels}concat=n={n}:v=0:a=1[a]",
+    ]
+
+    last_v_label = "v_concat"
+
+    if has_overlays:
+        font = FONT_PATH if os.path.exists(FONT_PATH) else "Arial"
+        for i, hl in enumerate(highlights[:15]):
+            text = hl["text"].replace("'", "\\'").replace(":", "\\:").replace(",", "\\,")
+            start_t = hl["start"]
+            end_t = hl["end"]
+            next_label = f"v_overlay{i}"
+            # Lower-third position, semi-transparent black box, yellow bold text
+            filter_parts.append(
+                f"[{last_v_label}]drawtext=text='{text}':fontsize=44:fontcolor=yellow@0.95:"
+                f"fontfile='{font}':x=(w-text_w)/2:y=h*0.72:"
+                f"box=1:boxcolor=black@0.45:boxborderw=10:"
+                f"bordercolor=black@0.6:borderw=2:"
+                f"enable='between(t,{start_t},{end_t})'[{next_label}]"
+            )
+            last_v_label = next_label
+
+    filter_parts.append(f"[{last_v_label}]null[v]")
+
+    filter_complex = ";".join(filter_parts)
+
+    cmd = [
+        ffmpeg, "-y", "-i", src,
+        "-filter_complex", filter_complex,
+        "-map", "[v]", "-map", "[a]",
+        output
+    ]
 
     return cmd, total_dur
