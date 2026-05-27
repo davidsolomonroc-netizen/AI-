@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from database import get_db
 from models.schemas import Creator, SimilarityCache
 from services.youtube import get_channel_info, search_channels_by_category
@@ -16,7 +16,7 @@ def find_similar(req: dict, db: Session = Depends(get_db)):
     if not creator:
         raise HTTPException(status_code=404, detail="创作者不存在")
 
-    cutoff = datetime.utcnow() - timedelta(hours=24)
+    cutoff = datetime.now(UTC) - timedelta(hours=24)
     cached = db.query(SimilarityCache).filter(
         SimilarityCache.source_creator_id == creator.id,
         SimilarityCache.created_at >= cutoff
