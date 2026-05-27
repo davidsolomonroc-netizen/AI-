@@ -23,7 +23,8 @@ CREATE TABLE emails (
     confidence_score FLOAT DEFAULT 0,
     source VARCHAR(100),
     verified_at TIMESTAMP DEFAULT NOW(),
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(creator_id, email)
 );
 
 CREATE TABLE searches (
@@ -43,5 +44,6 @@ CREATE TABLE similarity_cache (
 
 CREATE INDEX idx_creators_channel_id ON creators(youtube_channel_id);
 CREATE INDEX idx_emails_creator_id ON emails(creator_id);
-CREATE INDEX idx_similarity_source ON similarity_cache(source_creator_id);
+CREATE UNIQUE INDEX idx_similarity_pair ON similarity_cache(source_creator_id, target_creator_id);
 CREATE INDEX idx_similarity_created ON similarity_cache(created_at);
+CREATE INDEX idx_searches_created ON searches(created_at);
