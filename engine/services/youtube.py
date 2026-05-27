@@ -1,3 +1,4 @@
+import json
 import re
 import redis
 from googleapiclient.discovery import build
@@ -29,43 +30,34 @@ def get_channel_info(query: str) -> dict:
     cache_key = f"yt_channel:{query}"
     cached = cache.get(cache_key)
     if cached:
-        import json
         return json.loads(cached)
 
     youtube = build("youtube", "v3", developerKey=settings.youtube_api_key)
     channel_id = extract_channel_id(query)
 
     if channel_id and channel_id.startswith("UC"):
-        request = youtube.channels().list(
+        response = youtube.channels().list(
             part="snippet,statistics,brandingSettings,topicDetails",
             id=channel_id
-        )
+        ).execute()
     else:
         handle = channel_id or query.lstrip("@")
-        request = youtube.channels().list(
+        response = youtube.channels().list(
             part="snippet,statistics,brandingSettings,topicDetails",
             forHandle=handle
-        )
-        try:
-            resp = request.execute()
-        except HttpError:
-            resp = None
+        ).execute()
 
-        if not resp or not resp.get("items"):
-            request = youtube.search().list(
+        if not response.get("items"):
+            search_resp = youtube.search().list(
                 part="snippet", q=query, type="channel", maxResults=1
-            )
-            search_resp = request.execute()
+            ).execute()
             if search_resp.get("items"):
                 channel_id = search_resp["items"][0]["snippet"]["channelId"]
-                request = youtube.channels().list(
+                response = youtube.channels().list(
                     part="snippet,statistics,brandingSettings,topicDetails",
                     id=channel_id
-                )
-            else:
-                raise ValueError(f"未找到频道: {query}")
+                ).execute()
 
-    response = request.execute()
     if not response.get("items"):
         raise ValueError(f"未找到频道: {query}")
 
@@ -88,7 +80,6 @@ def get_channel_info(query: str) -> dict:
         "tags": channel_data.get("topicCategories", []),
     }
 
-    import json
     cache.setex(cache_key, 3600, json.dumps(result))
     return result
 
@@ -109,14 +100,17 @@ def get_channel_videos(channel_id: str, max_results: int = 50) -> list[dict]:
     cache_key = f"yt_videos:{channel_id}:{max_results}"
     cached = cache.get(cache_key)
     if cached:
-        import json
         return json.loads(cached)
 
     youtube = build("youtube", "v3", developerKey=settings.youtube_api_key)
 
-    channel_resp = youtube.channels().list(
-        part="contentDetails", id=channel_id
-    ).execute()
+    try:
+        channel_resp = youtube.channels().list(
+            part="contentDetails", id=channel_id
+        ).execute()
+    except HttpError:
+        return []
+
     if not channel_resp.get("items"):
         return []
     uploads_playlist = channel_resp["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
@@ -124,21 +118,26 @@ def get_channel_videos(channel_id: str, max_results: int = 50) -> list[dict]:
     videos = []
     next_page_token = None
     while len(videos) < max_results:
-        playlist_request = youtube.playlistItems().list(
-            part="snippet",
-            playlistId=uploads_playlist,
-            maxResults=min(50, max_results - len(videos)),
-            pageToken=next_page_token
-        )
-        playlist_response = playlist_request.execute()
+        try:
+            playlist_response = youtube.playlistItems().list(
+                part="snippet",
+                playlistId=uploads_playlist,
+                maxResults=min(50, max_results - len(videos)),
+                pageToken=next_page_token
+            ).execute()
+        except HttpError:
+            break
+
         video_ids = [
             item["snippet"]["resourceId"]["videoId"]
             for item in playlist_response.get("items", [])
         ]
 
         if video_ids:
-            video_request = youtube.videos().list(part="snippet", id=",".join(video_ids))
-            video_response = video_request.execute()
+            try:
+                video_response = youtube.videos().list(part="snippet", id=",".join(video_ids)).execute()
+            except HttpError:
+                break
             for video in video_response.get("items", []):
                 snippet = video.get("snippet", {})
                 videos.append({
@@ -151,30 +150,29 @@ def get_channel_videos(channel_id: str, max_results: int = 50) -> list[dict]:
         if not next_page_token:
             break
 
-    import json
     cache.setex(cache_key, 3600, json.dumps(videos))
     return videos
 
 
-def search_channels_by_category(category_id: str, exclude_channel_id: str, max_results: int = 50) -> list[dict]:
+def search_channels_by_category(category_id: str | None, exclude_channel_id: str, max_results: int = 50) -> list[dict]:
     """按分类搜索相关频道作为相似度候选池"""
+    if not category_id:
+        return []
+
     cache_key = f"yt_category:{category_id}:{max_results}"
     cached = cache.get(cache_key)
     if cached:
-        import json
         return json.loads(cached)
 
     youtube = build("youtube", "v3", developerKey=settings.youtube_api_key)
-    # topicId 可能为 None 或不是有效 ID，此时用搜索接口做 fallback
     try:
-        request = youtube.search().list(
+        response = youtube.search().list(
             part="snippet",
             topicId=category_id,
             type="channel",
             maxResults=min(50, max_results),
             order="relevance"
-        )
-        response = request.execute()
+        ).execute()
     except HttpError:
         return []
 
@@ -192,6 +190,5 @@ def search_channels_by_category(category_id: str, exclude_channel_id: str, max_r
         if len(channels) >= max_results:
             break
 
-    import json
     cache.setex(cache_key, 3600, json.dumps(channels))
     return channels
